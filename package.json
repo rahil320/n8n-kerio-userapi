@@ -36,9 +36,7 @@
       "dist/credentials/KerioConnectUserApi.credentials.ts"
     ],
     "nodes": [
-      "dist/nodes/KerioConnectAuth.node.ts",
-      "dist/nodes/kerio-client/KerioConnectAutoResponder.node.ts",
-      "dist/nodes/kerio-client/KerioConnectPassword.node.ts"
+      "dist/nodes/KerioConnectUser.node"
     ]
   },
   "devDependencies": {
