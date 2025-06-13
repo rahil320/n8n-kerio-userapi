@@ -1,5 +1,5 @@
 {
-  "name": "n8n-kerio-userapi",
+  "name": "n8n-nodes-kerio-userapi",
   "version": "0.1.0",
   "description": "Kerio Connect User API",
   "keywords": [
@@ -33,12 +33,12 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/ExampleCredentialsApi.credentials.js",
-      "dist/credentials/HttpBinApi.credentials.js"
+      "dist/credentials/KerioConnectUserApi.credentials.ts"
     ],
     "nodes": [
-      "dist/nodes/ExampleNode/ExampleNode.node.js",
-      "dist/nodes/HttpBin/HttpBin.node.js"
+      "dist/nodes/KerioConnectAuth.node.ts",
+      "dist/nodes/kerio-client/KerioConnectAutoResponder.node.ts",
+      "dist/nodes/kerio-client/KerioConnectPassword.node.ts"
     ]
   },
   "devDependencies": {
