@@ -2106,6 +2106,20 @@ export class KerioConnectUser implements INodeType {
 					const folderId = this.getNodeParameter('eventFolderId', i) as string;
 					const start = this.getNodeParameter('eventStart', i) as string;
 					const end = this.getNodeParameter('eventEnd', i) as string;
+					const attendees = this.getNodeParameter('eventAttendees', i) as { attendees: Array<{ email: string; displayName?: string; role: string; isNotified: boolean }> };
+					const description = this.getNodeParameter('eventDescription', i) as string;
+					const location = this.getNodeParameter('eventLocation', i) as string;
+					const additionalOptions = this.getNodeParameter('eventAdditionalOptions', i) as {
+						isAllDay?: boolean;
+						eventPriority?: string;
+						freeBusy?: string;
+						isPrivate?: boolean;
+						travelMinutes?: number;
+						reminder?: {
+							isSet?: boolean;
+							minutesBeforeStart?: number;
+						};
+					};
 
 					// Format date to ISO string with timezone
 					const formatDate = (dateValue: string) => {
@@ -2113,13 +2127,37 @@ export class KerioConnectUser implements INodeType {
 						return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, '+0000');
 					};
 
-					// Minimal event data with only required fields
+					// Format attendees
+					const formatAttendees = (attendeesList: Array<{ email: string; displayName?: string; role: string; isNotified: boolean }>) => {
+						return attendeesList.map((attendee) => ({
+							displayName: attendee.displayName || '',
+							emailAddress: attendee.email,
+							isNotified: attendee.isNotified,
+							role: attendee.role,
+						}));
+					};
+
+					// Event data with current fields plus travel time and reminder
 					const eventData = {
 						summary: summary,
 						start: formatDate(start),
 						end: formatDate(end),
 						folderId: folderId,
-						watermark: 0
+						watermark: 0,
+						attendees: formatAttendees(attendees.attendees || []),
+						description: description || '',
+						descriptionHtml: '',
+						location: location || '',
+						priority: additionalOptions.eventPriority || 'Normal',
+						isAllDay: additionalOptions.isAllDay || false,
+						freeBusy: additionalOptions.freeBusy || 'Busy',
+						isPrivate: additionalOptions.isPrivate || false,
+						travelMinutes: additionalOptions.travelMinutes || 0,
+						reminder: {
+							isSet: additionalOptions.reminder?.isSet !== undefined ? additionalOptions.reminder.isSet : true,
+							minutesBeforeStart: additionalOptions.reminder?.minutesBeforeStart || 15,
+							type: 'ReminderRelative'
+						}
 					};
 
 					requestOptions.headers.Cookie = cookie;
@@ -2127,10 +2165,10 @@ export class KerioConnectUser implements INodeType {
 					requestOptions.body = {
 						jsonrpc: '2.0',
 						id: 46,
-						method: 'Events.create',
-						params: {
-							events: [eventData]
-						}
+						 method: 'Events.create',
+						 params: {
+						 	events: [eventData]
+						 }
 					};
 
 					try {
