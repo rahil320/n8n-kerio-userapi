@@ -38,6 +38,7 @@ export class KerioConnectUser implements INodeType {
 					{ name: 'Authentication', value: 'authentication', description: 'Authenticate to Kerio Connect' },
 					{ name: 'AutoResponder', value: 'autoresponder', description: 'AutoResponder management' },
 					{ name: 'Calendar', value: 'calendar', description: 'Calendar management' },
+					{ name: 'Contact', value: 'contact', description: 'Contact management' },
 					{ name: 'Folder', value: 'folder', description: 'Folder management' },
 					{ name: 'Mail', value: 'mails', description: 'Mail management' },
 					{ name: 'Misc', value: 'misc', description: 'Misc operations' },
@@ -134,7 +135,9 @@ export class KerioConnectUser implements INodeType {
 				noDataExpression: true,
 				hint: 'Manage calendar events',
 				options: [
+					{ name: 'Create Event', value: 'createEvent', description: 'Create a new calendar event', action: 'Create a new calendar event' },
 					{ name: 'Get Calendar Events', value: 'getCalendarEvents', description: 'Get calendar events within a time range', action: 'Get calendar events' },
+					{ name: 'Remove Event', value: 'removeEvent', description: 'Remove a calendar event', action: 'Remove a calendar event' },
 				],
 				default: 'getCalendarEvents',
 				required: true,
@@ -148,11 +151,388 @@ export class KerioConnectUser implements INodeType {
 				noDataExpression: true,
 				hint: 'Manage mails',
 				options: [
+					{ name: 'Delete Mail', value: 'deleteMail', description: 'Delete or move mail to trash', action: 'Delete mail' },
 					{ name: 'Get Mails', value: 'getMails', description: 'Get mails from a folder', action: 'Get mails from a folder' },
+					{ name: 'Search Mail', value: 'searchMail', description: 'Search for mails', action: 'Search for mails' },
+					{ name: 'Send Mail', value: 'sendMail', description: 'Send a new email', action: 'Send a new email' },
+					{ name: 'Set Properties', value: 'setProperties', description: 'Set mail properties like read/unread or flag status', action: 'Set mail properties' },
 				],
 				default: 'getMails',
 				required: true,
 				displayOptions: { show: { resource: ['mails'] } },
+			},
+			// Contact Operations
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				noDataExpression: true,
+				hint: 'Manage contacts',
+				options: [
+					{ name: 'Add Contact', value: 'addContact', description: 'Add a new contact', action: 'Add a new contact' },
+					{ name: 'Delete Contact', value: 'deleteContact', description: 'Delete a contact', action: 'Delete a contact' },
+					{ name: 'Get Contacts', value: 'getContacts', description: 'Get all contacts', action: 'Get all contacts' },
+					{ name: 'Search Contact', value: 'searchContact', description: 'Search for contacts', action: 'Search for contacts' },
+					{ name: 'Update Contact', value: 'updateContact', description: 'Update an existing contact', action: 'Update an existing contact' },
+				],
+				default: 'getContacts',
+				required: true,
+				displayOptions: { show: { resource: ['contact'] } },
+			},
+			// Contact fields for Add/Edit operations
+			{
+				displayName: 'Contact ID',
+				name: 'contactId',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['contact'],
+						operation: ['deleteContact', 'updateContact'],
+					},
+				},
+				hint: 'ID of the contact to delete/update',
+			},
+			{
+				displayName: 'Common Name',
+				name: 'commonName',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['contact'],
+						operation: ['addContact', 'updateContact'],
+					},
+				},
+				hint: 'Full name of the contact',
+			},
+			{
+				displayName: 'First Name',
+				name: 'firstName',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['contact'],
+						operation: ['addContact', 'updateContact'],
+					},
+				},
+				hint: 'First name of the contact',
+			},
+			{
+				displayName: 'Surname',
+				name: 'surName',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['contact'],
+						operation: ['addContact', 'updateContact'],
+					},
+				},
+				hint: 'Surname of the contact',
+			},
+			{
+				displayName: 'Email',
+				name: 'contactEmail',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['contact'],
+						operation: ['addContact', 'updateContact'],
+					},
+				},
+				placeholder: 'name@email.com',
+				hint: 'Email address of the contact',
+			},
+			{
+				displayName: 'Phone',
+				name: 'phone',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['contact'],
+						operation: ['addContact', 'updateContact'],
+					},
+				},
+				hint: 'Phone number of the contact',
+			},
+			{
+				displayName: 'Company Name',
+				name: 'companyName',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['contact'],
+						operation: ['addContact', 'updateContact'],
+					},
+				},
+				hint: 'Company name',
+			},
+			{
+				displayName: 'Additional Options',
+				name: 'additionalOptions',
+				type: 'collection',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['contact'],
+						operation: ['addContact', 'updateContact'],
+					},
+				},
+				options: [
+					{
+						displayName: 'Anniversary',
+						name: 'anniversary',
+						type: 'dateTime',
+						default: '',
+						hint: 'Anniversary date',
+					},
+					{
+						displayName: 'Assistant Name',
+						name: 'assistantName',
+						type: 'string',
+						default: '',
+						hint: 'Assistant name',
+					},
+					{
+						displayName: 'Birthday',
+						name: 'birthDay',
+						type: 'dateTime',
+						default: '',
+						hint: 'Birthday of the contact',
+					},
+					{
+						displayName: 'Comment',
+						name: 'comment',
+						type: 'string',
+						default: '',
+						hint: 'Additional comments about the contact',
+					},
+					{
+						displayName: 'Country',
+						name: 'country',
+						type: 'string',
+						default: '',
+						hint: 'Country',
+					},
+					{
+						displayName: 'Department Name',
+						name: 'departmentName',
+						type: 'string',
+						default: '',
+						hint: 'Department name',
+					},
+					{
+						displayName: 'Extended Address',
+						name: 'extendedAddress',
+						type: 'string',
+						default: '',
+						hint: 'Extended address information',
+					},
+					{
+						displayName: 'IM Address',
+						name: 'IMAddress',
+						type: 'string',
+						default: '',
+						hint: 'Instant messaging address',
+					},
+					{
+						displayName: 'Locality',
+						name: 'locality',
+						type: 'string',
+						default: '',
+						hint: 'City or locality',
+					},
+					{
+						displayName: 'Manager Name',
+						name: 'managerName',
+						type: 'string',
+						default: '',
+						hint: 'Manager name',
+					},
+					{
+						displayName: 'Middle Name',
+						name: 'middleName',
+						type: 'string',
+						default: '',
+						hint: 'Middle name of the contact',
+					},
+					{
+						displayName: 'Nickname',
+						name: 'nickName',
+						type: 'string',
+						default: '',
+						hint: 'Nickname of the contact',
+					},
+					{
+						displayName: 'Profession',
+						name: 'profession',
+						type: 'string',
+						default: '',
+						hint: 'Profession of the contact',
+					},
+					{
+						displayName: 'State',
+						name: 'state',
+						type: 'string',
+						default: '',
+						hint: 'State or province',
+					},
+					{
+						displayName: 'Street',
+						name: 'street',
+						type: 'string',
+						default: '',
+						hint: 'Street address',
+					},
+					{
+						displayName: 'Title After',
+						name: 'titleAfter',
+						type: 'string',
+						default: '',
+						hint: 'Title after name (e.g., Jr, Sr)',
+					},
+					{
+						displayName: 'Title Before',
+						name: 'titleBefore',
+						type: 'string',
+						default: '',
+						hint: 'Title before name (e.g., Mr, Dr)',
+					},
+					{
+						displayName: 'URL',
+						name: 'url',
+						type: 'string',
+						default: '',
+						hint: 'Website URL',
+					},
+					{
+						displayName: 'ZIP Code',
+						name: 'zip',
+						type: 'string',
+						default: '',
+						hint: 'ZIP or postal code',
+					},
+				],
+			},
+			// Folder ID field (reusable across operations)
+			{
+				displayName: 'Folder ID',
+				name: 'folderId',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						operation: [
+							'getContacts',
+							'searchContact',
+						],
+					},
+				},
+				hint: 'ID of the folder to work with (optional)',
+			},
+			// Required Folder ID field for Add Contact operation
+			{
+				displayName: 'Folder ID',
+				name: 'folderIdRequired',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						operation: ['addContact'],
+					},
+				},
+				hint: 'ID of the folder to add the contact to (required)',
+			},
+			{
+				displayName: 'Search Query',
+				name: 'searchQuery',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['contact'],
+						operation: ['searchContact'],
+					},
+				},
+				hint: 'Search term to find contacts',
+			},
+			// Add property type selection for setProperties operation
+			{
+				displayName: 'Property Type',
+				name: 'propertyType',
+				type: 'options',
+				default: 'markReadUnread',
+				options: [
+					{ name: 'Mark Read/Unread', value: 'markReadUnread' },
+					{ name: 'Change Flag', value: 'changeFlag' },
+				],
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['setProperties'],
+					},
+				},
+				hint: 'Select the type of property to set',
+			},
+			// Add mail ID field for setProperties operation
+			{
+				displayName: 'Mail ID',
+				name: 'mailId',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['setProperties'],
+					},
+				},
+				hint: 'ID of the mail to modify',
+			},
+			// Add read/unread status field
+			{
+				displayName: 'Read Status',
+				name: 'isSeen',
+				type: 'boolean',
+				default: false,
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['setProperties'],
+						propertyType: ['markReadUnread'],
+					},
+				},
+				required: true,
+				hint: 'Set to true to mark as read, false to mark as unread',
+			},
+			// Add flag status field
+			{
+				displayName: 'Flag Status',
+				name: 'isFlagged',
+				type: 'boolean',
+				default: false,
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['setProperties'],
+						propertyType: ['changeFlag'],
+					},
+				},
+				required: true,
+				hint: 'Set to true to flag the mail, false to unflag',
 			},
 			// Mail folder ID field
 			{
@@ -168,6 +548,21 @@ export class KerioConnectUser implements INodeType {
 					},
 				},
 				hint: 'ID of the mail folder to get mails from',
+			},
+			// Required Mail folder ID field for Search Mail operation
+			{
+				displayName: 'Folder ID',
+				name: 'mailFolderIdRequired',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['searchMail'],
+					},
+				},
+				hint: 'ID of the mail folder to search in (required)',
 			},
 			// Calendar event date range fields
 			{
@@ -235,9 +630,20 @@ export class KerioConnectUser implements INodeType {
 							'deleteFolder',
 							'getQuota',
 							'getAlarm',
+							'createEvent',
 							'getCalendarEvents',
+							'removeEvent',
 							'getSubscribedFolders',
 							'getMails',
+							'searchMail',
+							'setProperties',
+							'sendMail',
+							'deleteMail',
+							'getContacts',
+							'addContact',
+							'updateContact',
+							'deleteContact',
+							'searchContact',
 						],
 					},
 				},
@@ -260,14 +666,25 @@ export class KerioConnectUser implements INodeType {
 							'disableAutoResponder',
 							'getFolders',
 							'getPublicFolders',
-							'createFolder',
 							'searchFolder',
+							'createFolder',
 							'deleteFolder',
 							'getQuota',
 							'getAlarm',
+							'createEvent',
 							'getCalendarEvents',
+							'removeEvent',
 							'getSubscribedFolders',
 							'getMails',
+							'searchMail',
+							'setProperties',
+							'sendMail',
+							'deleteMail',
+							'getContacts',
+							'addContact',
+							'updateContact',
+							'deleteContact',
+							'searchContact',
 						],
 					},
 				},
@@ -439,6 +856,557 @@ export class KerioConnectUser implements INodeType {
 				},
 				required: true,
 				hint: 'End date/time for alarm range',
+			},
+			// Add fields for Send Mail operation
+			{
+				displayName: 'From Email',
+				name: 'fromEmail',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['sendMail'],
+					},
+				},
+				hint: 'Sender email address',
+			},
+			{
+				displayName: 'From Name',
+				name: 'fromName',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['sendMail'],
+					},
+				},
+				hint: 'Sender name (optional)',
+			},
+			{
+				displayName: 'To',
+				name: 'to',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				default: {},
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['sendMail'],
+					},
+				},
+				options: [
+					{
+						name: 'recipients',
+						displayName: 'Recipient',
+						values: [
+							{
+								displayName: 'Email',
+								name: 'email',
+								type: 'string',
+								default: '',
+								required: true,
+								placeholder: 'name@email.com',
+							},
+							{
+								displayName: 'Name',
+								name: 'name',
+								type: 'string',
+								default: '',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'CC',
+				name: 'cc',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['sendMail'],
+					},
+				},
+				options: [
+					{
+						name: 'recipients',
+						displayName: 'Recipient',
+						values: [
+							{
+								displayName: 'Email',
+								name: 'email',
+								type: 'string',
+								default: '',
+								required: true,
+								placeholder: 'name@email.com',
+							},
+							{
+								displayName: 'Name',
+								name: 'name',
+								type: 'string',
+								default: '',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'BCC',
+				name: 'bcc',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['sendMail'],
+					},
+				},
+				options: [
+					{
+						name: 'recipients',
+						displayName: 'Recipient',
+						values: [
+							{
+								displayName: 'Email',
+								name: 'email',
+								type: 'string',
+								default: '',
+								required: true,
+								placeholder: 'name@email.com',
+							},
+							{
+								displayName: 'Name',
+								name: 'name',
+								type: 'string',
+								default: '',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Subject',
+				name: 'subject',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['sendMail'],
+					},
+				},
+				hint: 'Email subject',
+			},
+			{
+				displayName: 'Message',
+				name: 'message',
+				type: 'string',
+				typeOptions: {
+					rows: 5,
+				},
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['sendMail'],
+					},
+				},
+				hint: 'Email message content (HTML supported)',
+			},
+			{
+				displayName: 'Priority',
+				name: 'priority',
+				type: 'options',
+				default: 'Normal',
+				options: [
+					{ name: 'Low', value: 'Low' },
+					{ name: 'Normal', value: 'Normal' },
+					{ name: 'High', value: 'High' },
+				],
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['sendMail'],
+					},
+				},
+				hint: 'Email priority',
+			},
+			{
+				displayName: 'Additional Options',
+				name: 'additionalOptions',
+				type: 'collection',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['sendMail'],
+					},
+				},
+				options: [
+					{
+						displayName: 'Encrypt',
+						name: 'encrypt',
+						type: 'boolean',
+						default: false,
+					},
+					{
+						displayName: 'Sign',
+						name: 'sign',
+						type: 'boolean',
+						default: false,
+					},
+					{
+						displayName: 'Request DSN',
+						name: 'requestDSN',
+						type: 'boolean',
+						default: false,
+					},
+					{
+						displayName: 'Send MDN',
+						name: 'isMDNSent',
+						type: 'boolean',
+						default: true,
+					},
+				],
+			},
+			// Add deletion type selection for deleteMail operation
+			{
+				displayName: 'Deletion Type',
+				name: 'deletionType',
+				type: 'options',
+				default: 'moveToTrash',
+				options: [
+					{ name: 'Move to Trash', value: 'moveToTrash' },
+					{ name: 'Permanent Delete', value: 'permanentDelete' },
+				],
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['deleteMail'],
+					},
+				},
+				hint: 'Select how to delete the mail',
+			},
+			// Add mail IDs field for deleteMail operation
+			{
+				displayName: 'Mail IDs',
+				name: 'mailIds',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				default: {},
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['deleteMail'],
+					},
+				},
+				options: [
+					{
+						name: 'ids',
+						displayName: 'Mail ID',
+						values: [
+							{
+								displayName: 'ID',
+								name: 'id',
+								type: 'string',
+								default: '',
+								required: true,
+								placeholder: 'keriostorage://mail/domain/user/mailId',
+							},
+						],
+					},
+				],
+			},
+			// Add trash folder ID field for deleteMail operation
+			{
+				displayName: 'Trash Folder ID',
+				name: 'trashFolderId',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['deleteMail'],
+						deletionType: ['moveToTrash'],
+					},
+				},
+				hint: 'ID of the Trash/Deleted Items folder',
+			},
+			// Add search query field for searchMail operation
+			{
+				displayName: 'Search Query',
+				name: 'mailSearchQuery',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['searchMail'],
+					},
+				},
+				hint: 'Search term to find mails',
+			},
+			// Add event ID field for removeEvent operation
+			{
+				displayName: 'Event ID',
+				name: 'eventId',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['calendar'],
+						operation: ['removeEvent'],
+					},
+				},
+				hint: 'ID of the calendar event to remove',
+			},
+			// Calendar event creation fields
+			{
+				displayName: 'Summary',
+				name: 'eventSummary',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['calendar'],
+						operation: ['createEvent'],
+					},
+				},
+				hint: 'Title/summary of the calendar event',
+			},
+			{
+				displayName: 'Description',
+				name: 'eventDescription',
+				type: 'string',
+				typeOptions: {
+					rows: 3,
+				},
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['calendar'],
+						operation: ['createEvent'],
+					},
+				},
+				hint: 'Description of the calendar event',
+			},
+			{
+				displayName: 'Location',
+				name: 'eventLocation',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['calendar'],
+						operation: ['createEvent'],
+					},
+				},
+				hint: 'Location of the calendar event',
+			},
+			{
+				displayName: 'Start Date Time',
+				name: 'eventStart',
+				type: 'dateTime',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['calendar'],
+						operation: ['createEvent'],
+					},
+				},
+				hint: 'Start date/time of the calendar event',
+			},
+			{
+				displayName: 'End Date Time',
+				name: 'eventEnd',
+				type: 'dateTime',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['calendar'],
+						operation: ['createEvent'],
+					},
+				},
+				hint: 'End date/time of the calendar event',
+			},
+			{
+				displayName: 'Calendar Folder ID',
+				name: 'eventFolderId',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['calendar'],
+						operation: ['createEvent'],
+					},
+				},
+				hint: 'ID of the calendar folder to create the event in',
+			},
+			{
+				displayName: 'Attendees',
+				name: 'eventAttendees',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['calendar'],
+						operation: ['createEvent'],
+					},
+				},
+				options: [
+					{
+						name: 'attendees',
+						displayName: 'Attendee',
+						values: [
+							{
+								displayName: 'Email',
+								name: 'email',
+								type: 'string',
+								default: '',
+								required: true,
+								placeholder: 'name@email.com',
+							},
+							{
+								displayName: 'Display Name',
+								name: 'displayName',
+								type: 'string',
+								default: '',
+							},
+							{
+								displayName: 'Role',
+								name: 'role',
+								type: 'options',
+								default: 'RoleRequiredAttendee',
+								options: [
+									{ name: 'Organizer', value: 'RoleOrganizer' },
+									{ name: 'Required Attendee', value: 'RoleRequiredAttendee' },
+									{ name: 'Optional Attendee', value: 'RoleOptionalAttendee' },
+								],
+							},
+							{
+								displayName: 'Notify',
+								name: 'isNotified',
+								type: 'boolean',
+								default: false,
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Additional Options',
+				name: 'eventAdditionalOptions',
+				type: 'collection',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['calendar'],
+						operation: ['createEvent'],
+					},
+				},
+				options: [
+					{
+						displayName: 'All Day Event',
+						name: 'isAllDay',
+						type: 'boolean',
+						default: false,
+					},
+					{
+						displayName: 'Free/Busy Status',
+						name: 'freeBusy',
+						type: 'options',
+						default: 'Busy',
+						options: [
+							{ name: 'Busy', value: 'Busy' },
+							{ name: 'Free', value: 'Free' },
+							{ name: 'Tentative', value: 'Tentative' },
+							{ name: 'Out of Office', value: 'OutOfOffice' },
+						],
+					},
+					{
+						displayName: 'Priority',
+						name: 'eventPriority',
+						type: 'options',
+						default: 'Normal',
+						options: [
+							{ name: 'Low', value: 'Low' },
+							{ name: 'Normal', value: 'Normal' },
+							{ name: 'High', value: 'High' },
+						],
+					},
+					{
+						displayName: 'Private Event',
+						name: 'isPrivate',
+						type: 'boolean',
+						default: false,
+					},
+					{
+						displayName: 'Reminder',
+						name: 'reminder',
+						type: 'collection',
+						default: {},
+						options: [
+							{
+								displayName: 'Set Reminder',
+								name: 'isSet',
+								type: 'boolean',
+								default: true,
+							},
+							{
+								displayName: 'Minutes Before Start',
+								name: 'minutesBeforeStart',
+								type: 'number',
+								default: 15,
+								typeOptions: {
+									minValue: 1,
+								},
+								displayOptions: {
+									show: {
+										isSet: [true],
+									},
+								},
+							},
+						],
+					},
+					{
+						displayName: 'Travel Time (Minutes)',
+						name: 'travelMinutes',
+						type: 'number',
+						default: 0,
+						typeOptions: {
+							minValue: 0,
+						},
+					},
+				],
 			},
 		] as INodeProperties[],
 	};
@@ -889,6 +1857,206 @@ export class KerioConnectUser implements INodeType {
 
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
+				} else if (operation === 'setProperties') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const mailId = this.getNodeParameter('mailId', i) as string;
+					const propertyType = this.getNodeParameter('propertyType', i) as string;
+
+					let mailProperties: any = {
+						id: mailId,
+					};
+
+					if (propertyType === 'markReadUnread') {
+						const isSeen = this.getNodeParameter('isSeen', i) as boolean;
+						mailProperties.isSeen = isSeen;
+					} else if (propertyType === 'changeFlag') {
+						const isFlagged = this.getNodeParameter('isFlagged', i) as boolean;
+						mailProperties.isFlagged = isFlagged;
+					}
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						id: 139,
+						jsonrpc: '2.0',
+						method: 'Mails.set',
+						params: {
+							mails: [mailProperties],
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'sendMail') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const fromEmail = this.getNodeParameter('fromEmail', i) as string;
+					const fromName = this.getNodeParameter('fromName', i) as string;
+					const to = this.getNodeParameter('to', i) as { recipients: Array<{ email: string; name?: string }> };
+					const cc = this.getNodeParameter('cc', i) as { recipients: Array<{ email: string; name?: string }> };
+					const bcc = this.getNodeParameter('bcc', i) as { recipients: Array<{ email: string; name?: string }> };
+					const subject = this.getNodeParameter('subject', i) as string;
+					const message = this.getNodeParameter('message', i) as string;
+					const priority = this.getNodeParameter('priority', i) as string;
+					const additionalOptions = this.getNodeParameter('additionalOptions', i) as {
+						encrypt?: boolean;
+						sign?: boolean;
+						requestDSN?: boolean;
+						isMDNSent?: boolean;
+					};
+
+					// Format recipients
+					const formatRecipients = (recipients: Array<{ email: string; name?: string }>) => {
+						return recipients.map((recipient) => ({
+							address: recipient.email,
+							name: recipient.name || '',
+						}));
+					};
+
+					const mailData = {
+						attachments: [],
+						bcc: formatRecipients(bcc.recipients || []),
+						cc: formatRecipients(cc.recipients || []),
+						displayableParts: [
+							{
+								content: message,
+								contentType: 'ctTextHtml',
+							},
+						],
+						encrypt: additionalOptions.encrypt || false,
+						from: {
+							address: fromEmail,
+							name: fromName,
+						},
+						headers: [],
+						isAnswered: false,
+						isDraft: false,
+						isFlagged: false,
+						isForwarded: false,
+						isJunk: false,
+						isMDNSent: additionalOptions.isMDNSent !== undefined ? additionalOptions.isMDNSent : true,
+						isReadOnly: false,
+						isSeen: true,
+						notificationTo: {},
+						priority,
+						replyTo: [],
+						requestDSN: additionalOptions.requestDSN || false,
+						send: true,
+						sender: {},
+						showExternal: false,
+						sign: additionalOptions.sign || false,
+						subject,
+						to: formatRecipients(to.recipients),
+					};
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						id: 29,
+						jsonrpc: '2.0',
+						method: 'Mails.create',
+						params: {
+							mails: [mailData],
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'deleteMail') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const deletionType = this.getNodeParameter('deletionType', i) as string;
+					const mailIds = this.getNodeParameter('mailIds', i) as { ids: Array<{ id: string }> };
+
+					// Extract mail IDs
+					const ids = mailIds.ids.map((item) => item.id);
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+
+					if (deletionType === 'permanentDelete') {
+						requestOptions.body = {
+							jsonrpc: '2.0',
+							id: 60,
+							method: 'Mails.remove',
+							params: {
+								ids,
+							},
+						};
+					} else {
+						// Move to trash
+						const trashFolderId = this.getNodeParameter('trashFolderId', i) as string;
+						requestOptions.body = {
+							jsonrpc: '2.0',
+							id: 61,
+							method: 'Mails.move',
+							params: {
+								ids,
+								destinationFolderId: trashFolderId,
+							},
+						};
+					}
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'searchMail') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const searchQuery = this.getNodeParameter('mailSearchQuery', i) as string;
+					const folderId = this.getNodeParameter('mailFolderIdRequired', i) as string;
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 19,
+						method: 'Mails.get',
+						params: {
+							folderIds: [folderId],
+							query: {
+								conditions: [
+									{
+										comparator: 'Like',
+										fieldName: 'FULLTEXT',
+										value: searchQuery
+									}
+								],
+								fields: [
+									'id',
+									'from',
+									'to',
+									'subject',
+									'receiveDate',
+									'modifiedDate',
+									'sendDate',
+									'isSeen',
+									'isJunk',
+									'isAnswered',
+									'isForwarded',
+									'isFlagged',
+									'isReadOnly',
+									'isDraft',
+									'folderId',
+									'hasAttachment',
+									'priority',
+									'size'
+								],
+								limit: 50,
+								orderBy: [
+									{
+										caseSensitive: true,
+										columnName: 'receiveDate',
+										direction: 'Desc'
+									}
+								],
+								start: 0
+							}
+						}
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
 				} else {
 					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
 				}
@@ -976,6 +2144,506 @@ export class KerioConnectUser implements INodeType {
 
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
+				} else if (operation === 'removeEvent') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const eventId = this.getNodeParameter('eventId', i) as string;
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 29,
+						method: 'Occurrences.remove',
+						params: {
+							occurrences: [
+								{
+									id: eventId,
+									modification: 'modifyThis'
+								}
+							]
+						}
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else {
+					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
+				}
+			} else if (resource === 'contact') {
+				if (operation === 'getContacts') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const folderId = this.getNodeParameter('folderId', i) as string;
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 11,
+						method: 'Contacts.getFromCache',
+						params: {
+							folderIds: folderId ? [folderId] : [],
+							query: {
+								fields: [
+									'id',
+									'folderId',
+									'watermark',
+									'type',
+									'commonName',
+									'titleAfter',
+									'titleBefore',
+									'firstName',
+									'middleName',
+									'surName',
+									'nickName',
+									'emailAddresses',
+									'phoneNumbers',
+									'photo',
+									'companyName'
+								],
+								limit: 25000,
+								start: 0
+							}
+						}
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'addContact') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const folderId = this.getNodeParameter('folderIdRequired', i) as string;
+					const commonName = this.getNodeParameter('commonName', i) as string;
+					const firstName = this.getNodeParameter('firstName', i) as string;
+					const surName = this.getNodeParameter('surName', i) as string;
+					const email = this.getNodeParameter('contactEmail', i) as string;
+					const phone = this.getNodeParameter('phone', i) as string;
+					const companyName = this.getNodeParameter('companyName', i) as string;
+					const additionalOptions = this.getNodeParameter('additionalOptions', i) as {
+						middleName?: string;
+						titleBefore?: string;
+						titleAfter?: string;
+						nickName?: string;
+						departmentName?: string;
+						profession?: string;
+						managerName?: string;
+						assistantName?: string;
+						comment?: string;
+						IMAddress?: string;
+						birthDay?: string;
+						anniversary?: string;
+						street?: string;
+						state?: string;
+						locality?: string;
+						zip?: string;
+						country?: string;
+						extendedAddress?: string;
+						url?: string;
+					};
+
+					// Format date fields if provided
+					const formatDate = (dateValue: string | undefined) => {
+						if (!dateValue) return '';
+						const date = new Date(dateValue);
+						return date.toISOString().slice(0, 10).replace(/-/g, '');
+					};
+
+					const contactData = {
+						folderId,
+						watermark: 0,
+						type: 'ctContact',
+						commonName,
+						firstName,
+						middleName: additionalOptions.middleName || '',
+						surName,
+						titleBefore: additionalOptions.titleBefore || '',
+						titleAfter: additionalOptions.titleAfter || '',
+						nickName: additionalOptions.nickName || '',
+						phoneNumbers: phone ? [{
+							type: 'TypeMobile',
+							number: phone,
+							extension: { label: '', groupId: '' },
+						}] : [],
+						emailAddresses: [{
+							address: email,
+							name: '',
+							preferred: false,
+							isValidCertificate: false,
+							type: 'EmailWork',
+							refId: '',
+							extension: { label: '', groupId: '' },
+						}],
+						postalAddresses: (additionalOptions.street || additionalOptions.state || additionalOptions.locality || additionalOptions.zip || additionalOptions.country || additionalOptions.extendedAddress) ? [{
+							preferred: false,
+							pobox: '',
+							extendedAddress: additionalOptions.extendedAddress || '',
+							street: additionalOptions.street || '',
+							locality: additionalOptions.locality || '',
+							state: additionalOptions.state || '',
+							zip: additionalOptions.zip || '',
+							country: additionalOptions.country || '',
+							label: '',
+							type: 'AddressWork',
+							extension: { label: '', groupId: '' },
+						}] : [],
+						urls: additionalOptions.url ? [{
+							type: 'UrlWork',
+							url: additionalOptions.url,
+							extension: { label: '', groupId: '' },
+						}] : [],
+						birthDay: formatDate(additionalOptions.birthDay),
+						anniversary: formatDate(additionalOptions.anniversary),
+						companyName,
+						departmentName: additionalOptions.departmentName || '',
+						profession: additionalOptions.profession || '',
+						managerName: additionalOptions.managerName || '',
+						assistantName: additionalOptions.assistantName || '',
+						comment: additionalOptions.comment || '',
+						IMAddress: additionalOptions.IMAddress || '',
+						photo: { id: '', url: '' },
+						certSourceId: '',
+						isGalContact: false,
+					};
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 18,
+						method: 'Contacts.create',
+						params: {
+							contacts: [contactData],
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'deleteContact') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const contactId = this.getNodeParameter('contactId', i) as string;
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 1,
+						method: 'Contacts.remove',
+						params: {
+							ids: [contactId],
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'searchContact') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const searchQuery = this.getNodeParameter('searchQuery', i) as string;
+					const folderId = this.getNodeParameter('folderId', i) as string;
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 11,
+						method: 'Contacts.getFromCache',
+						params: {
+							folderIds: folderId ? [folderId] : [],
+							query: {
+								conditions: [
+									{
+										comparator: 'Like',
+										fieldName: 'QUICKSEARCH',
+										value: searchQuery
+									}
+								],
+								fields: [
+									'id',
+									'folderId',
+									'watermark',
+									'type',
+									'commonName',
+									'titleAfter',
+									'titleBefore',
+									'firstName',
+									'middleName',
+									'surName',
+									'nickName',
+									'emailAddresses',
+									'phoneNumbers',
+									'photo',
+									'companyName'
+								],
+								limit: 25000,
+								start: 0
+							}
+						}
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'updateContact') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const contactId = this.getNodeParameter('contactId', i) as string;
+					const commonName = this.getNodeParameter('commonName', i) as string;
+					const firstName = this.getNodeParameter('firstName', i) as string;
+					const surName = this.getNodeParameter('surName', i) as string;
+					const email = this.getNodeParameter('contactEmail', i) as string;
+					const phone = this.getNodeParameter('phone', i) as string;
+					const companyName = this.getNodeParameter('companyName', i) as string;
+					const additionalOptions = this.getNodeParameter('additionalOptions', i) as {
+						middleName?: string;
+						titleBefore?: string;
+						titleAfter?: string;
+						nickName?: string;
+						departmentName?: string;
+						profession?: string;
+						managerName?: string;
+						assistantName?: string;
+						comment?: string;
+						IMAddress?: string;
+						birthDay?: string;
+						anniversary?: string;
+						street?: string;
+						state?: string;
+						locality?: string;
+						zip?: string;
+						country?: string;
+						extendedAddress?: string;
+						url?: string;
+					};
+
+					// Format date fields if provided
+					const formatDate = (dateValue: string | undefined) => {
+						if (!dateValue) return '';
+						const date = new Date(dateValue);
+						return date.toISOString().slice(0, 10).replace(/-/g, '');
+					};
+
+					const contactData = {
+						id: contactId,
+						watermark: 0,
+						type: 'ctContact',
+						commonName,
+						firstName,
+						middleName: additionalOptions.middleName || '',
+						surName,
+						titleBefore: additionalOptions.titleBefore || '',
+						titleAfter: additionalOptions.titleAfter || '',
+						nickName: additionalOptions.nickName || '',
+						phoneNumbers: phone ? [{
+							type: 'TypeMobile',
+							number: phone,
+							extension: { label: '', groupId: '' },
+						}] : [],
+						emailAddresses: [{
+							address: email,
+							name: '',
+							preferred: false,
+							isValidCertificate: false,
+							type: 'EmailWork',
+							refId: '',
+							extension: { label: '', groupId: '' },
+						}],
+						postalAddresses: (additionalOptions.street || additionalOptions.state || additionalOptions.locality || additionalOptions.zip || additionalOptions.country || additionalOptions.extendedAddress) ? [{
+							preferred: false,
+							pobox: '',
+							extendedAddress: additionalOptions.extendedAddress || '',
+							street: additionalOptions.street || '',
+							locality: additionalOptions.locality || '',
+							state: additionalOptions.state || '',
+							zip: additionalOptions.zip || '',
+							country: additionalOptions.country || '',
+							label: '',
+							type: 'AddressWork',
+							extension: { label: '', groupId: '' },
+						}] : [],
+						urls: additionalOptions.url ? [{
+							type: 'UrlWork',
+							url: additionalOptions.url,
+							extension: { label: '', groupId: '' },
+						}] : [],
+						birthDay: formatDate(additionalOptions.birthDay),
+						anniversary: formatDate(additionalOptions.anniversary),
+						companyName,
+						departmentName: additionalOptions.departmentName || '',
+						profession: additionalOptions.profession || '',
+						managerName: additionalOptions.managerName || '',
+						assistantName: additionalOptions.assistantName || '',
+						comment: additionalOptions.comment || '',
+						IMAddress: additionalOptions.IMAddress || '',
+						photo: { id: '', url: '' },
+						certSourceId: '',
+						isGalContact: false,
+					};
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 18,
+						method: 'Contacts.set',
+						params: {
+							contacts: [contactData],
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else {
+					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
+				}
+			} else if (resource === 'calendar') {
+				if (operation === 'createEvent') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const summary = this.getNodeParameter('eventSummary', i) as string;
+					const description = this.getNodeParameter('eventDescription', i) as string;
+					const location = this.getNodeParameter('eventLocation', i) as string;
+					//const start = this.getNodeParameter('eventStart', i) as string;
+					//const end = this.getNodeParameter('eventEnd', i) as string;
+					const folderId = this.getNodeParameter('eventFolderId', i) as string;
+					//const attendees = this.getNodeParameter('eventAttendees', i) as { attendees: Array<{ email: string; displayName?: string; role: string; isNotified: boolean }> };
+					const additionalOptions = this.getNodeParameter('eventAdditionalOptions', i) as {
+						isAllDay?: boolean;
+						isPrivate?: boolean;
+						freeBusy?: string;
+						eventPriority?: string;
+						travelMinutes?: number;
+						reminder?: {
+							isSet?: boolean;
+							minutesBeforeStart?: number;
+						};
+					};
+/*
+					// Format date to ISO string with timezone
+					const formatDate = (dateValue: string) => {
+						const date = new Date(dateValue);
+						return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, '+0000');
+					};
+*/
+					// Format attendees
+					/*
+					const formatAttendees = (attendeesList: Array<{ email: string; displayName?: string; role: string; isNotified: boolean }>) => {
+						return attendeesList.map((attendee) => ({
+							displayName: attendee.displayName || '',
+							emailAddress: attendee.email,
+							isNotified: attendee.isNotified,
+							role: attendee.role,
+						}));
+					};
+					*/
+					/*
+					const eventData = {
+						access: 'EAccessCreator',
+						attachments: [],
+						attendees: formatAttendees(attendees.attendees || []),
+						description: description || '',
+						descriptionHtml: '',
+						end: formatDate(end),
+						folderId,
+						freeBusy: additionalOptions.freeBusy || 'Busy',
+						isAllDay: additionalOptions.isAllDay || false,
+						isCancelled: false,
+						isPrivate: additionalOptions.isPrivate || false,
+						label: 'None',
+						location: location || '',
+						priority: additionalOptions.eventPriority || 'Normal',
+						reminder: {
+							isSet: additionalOptions.reminder?.isSet !== undefined ? additionalOptions.reminder.isSet : true,
+							minutesBeforeStart: additionalOptions.reminder?.minutesBeforeStart || 15,
+							type: 'ReminderRelative'
+						},
+						rule: {
+							isSet: false
+						},
+						start: formatDate(start),
+						summary,
+						travelMinutes: additionalOptions.travelMinutes || 0,
+						watermark: 0
+					};
+
+					*/
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 46,
+						method: 'Events.create',
+						params: {
+							//events: [eventData]
+							events: {
+								access: 'EAccessCreator',
+								attachments: [],
+								//attendees: formatAttendees(attendees.attendees || []),
+								attendees: [
+               {
+                  displayName: '',
+                  emailAddress: 'dir@sotlive.com',
+                  isNotified: false,
+                  role: 'RoleOrganizer'
+               }],
+								description: description || '',
+								descriptionHtml: '',
+								//start: formatDate(start),
+								//end: formatDate(end),
+								end: '2025-06-20T10:00:00+0000',
+								folderId: folderId,
+								freeBusy: additionalOptions.freeBusy || 'Busy',
+								isAllDay: additionalOptions.isAllDay || false,
+								isCancelled: false,
+								isPrivate: additionalOptions.isPrivate || false,
+								label: 'None',
+								location: location || '',
+								priority: additionalOptions.eventPriority || 'Normal',
+								reminder: {
+									isSet: additionalOptions.reminder?.isSet !== undefined ? additionalOptions.reminder.isSet : true,
+									minutesBeforeStart: additionalOptions.reminder?.minutesBeforeStart || 15,
+									type: 'ReminderRelative'
+								},
+								rule: {
+									isSet: false
+								},
+								//start: formatDate(start),
+								start: '2025-06-20T09:00:00+0000',
+								summary: summary,
+								travelMinutes: additionalOptions.travelMinutes || 0,
+								watermark: 0
+							}
+						}
+					};
+
+					try {
+						const response = await this.helpers.request!(requestOptions);
+						// Add debugging information
+						returnItems.push({
+							json: {
+								success: true,
+								result: response.body.result,
+								fullResponse: response.body,
+								statusCode: response.statusCode,
+								headers: response.headers,
+								requestBody: requestOptions.body,
+								requestUrl: requestOptions.url
+							}
+						});
+					} catch (error) {
+						// Add error debugging information
+						returnItems.push({
+							json: {
+								success: false,
+								error: error.message,
+								requestBody: requestOptions.body,
+								requestHeaders: requestOptions.headers,
+								requestUrl: requestOptions.url,
+								errorDetails: error
+							}
+						});
+						throw error;
+					}
 				} else {
 					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
 				}
