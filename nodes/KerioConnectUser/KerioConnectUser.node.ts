@@ -42,7 +42,9 @@ export class KerioConnectUser implements INodeType {
 					{ name: 'Folder', value: 'folder', description: 'Folder management' },
 					{ name: 'Mail', value: 'mails', description: 'Mail management' },
 					{ name: 'Misc', value: 'misc', description: 'Misc operations' },
+					{ name: 'Note', value: 'notes', description: 'Notes management' },
 					{ name: 'Password', value: 'password', description: 'Password management' },
+					{ name: 'Task', value: 'task', description: 'Task management' },
 				],
 				default: 'authentication',
 				required: true,
@@ -178,6 +180,41 @@ export class KerioConnectUser implements INodeType {
 				default: 'getContacts',
 				required: true,
 				displayOptions: { show: { resource: ['contact'] } },
+			},
+			// Task Operations
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				noDataExpression: true,
+				hint: 'Manage tasks',
+				options: [
+					{ name: 'Create Task', value: 'createTask', description: 'Create a new task', action: 'Create a new task' },
+					{ name: 'Delete Task', value: 'deleteTask', description: 'Delete a task', action: 'Delete a task' },
+					{ name: 'Edit Task', value: 'editTask', description: 'Edit an existing task', action: 'Edit an existing task' },
+					{ name: 'Get Tasks', value: 'getTasks', description: 'Get all tasks', action: 'Get all tasks' },
+					{ name: 'Update Task', value: 'updateTask', description: 'Update an existing task', action: 'Update an existing task' },
+				],
+				default: 'getTasks',
+				required: true,
+				displayOptions: { show: { resource: ['task'] } },
+			},
+			// Notes Operations
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				noDataExpression: true,
+				hint: 'Manage notes',
+				options: [
+					{ name: 'Get Notes', value: 'getNotes', description: 'Get all notes', action: 'Get all notes' },
+					{ name: 'Create Note', value: 'createNote', description: 'Create a new note', action: 'Create a new note' },
+					{ name: 'Edit Note', value: 'editNote', description: 'Edit an existing note', action: 'Edit an existing note' },
+					{ name: 'Delete Note', value: 'deleteNote', description: 'Delete a note', action: 'Delete a note' },
+				],
+				default: 'getNotes',
+				required: true,
+				displayOptions: { show: { resource: ['notes'] } },
 			},
 			// Contact fields for Add/Edit operations
 			{
@@ -644,6 +681,15 @@ export class KerioConnectUser implements INodeType {
 							'updateContact',
 							'deleteContact',
 							'searchContact',
+							'getTasks',
+							'createTask',
+							'editTask',
+							'updateTask',
+							'deleteTask',
+							'getNotes',
+							'createNote',
+							'editNote',
+							'deleteNote',
 						],
 					},
 				},
@@ -685,6 +731,15 @@ export class KerioConnectUser implements INodeType {
 							'updateContact',
 							'deleteContact',
 							'searchContact',
+							'getTasks',
+							'createTask',
+							'editTask',
+							'updateTask',
+							'deleteTask',
+							'getNotes',
+							'createNote',
+							'editNote',
+							'deleteNote',
 						],
 					},
 				},
@@ -815,7 +870,7 @@ export class KerioConnectUser implements INodeType {
 					{ name: 'Calendar', value: 'FCalendar' },
 					{ name: 'Contact', value: 'FContact' },
 					{ name: 'Mails', value: 'FMail' },
-					{ name: 'Notes', value: 'FNote' },
+					{ name: 'Note', value: 'FNote' },
 					{ name: 'Root', value: 'FRoot' },
 					{ name: 'Task', value: 'FTask' },
 				],
@@ -1407,6 +1462,228 @@ export class KerioConnectUser implements INodeType {
 						},
 					},
 				],
+			},
+			// Task fields for Create/Edit/Update operations
+			{
+				displayName: 'Task ID',
+				name: 'taskId',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['deleteTask', 'editTask', 'updateTask'],
+					},
+				},
+				hint: 'ID of the task to delete/edit/update',
+			},
+			{
+				displayName: 'Task Title',
+				name: 'taskTitle',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['createTask', 'editTask', 'updateTask'],
+					},
+				},
+				hint: 'Title of the task',
+			},
+			{
+				displayName: 'Task Description',
+				name: 'taskDescription',
+				type: 'string',
+				typeOptions: {
+					rows: 3,
+				},
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['createTask', 'editTask', 'updateTask'],
+					},
+				},
+				hint: 'Description of the task',
+			},
+			{
+				displayName: 'Due Date',
+				name: 'taskDueDate',
+				type: 'dateTime',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['createTask', 'editTask', 'updateTask'],
+					},
+				},
+				hint: 'Due date for the task',
+			},
+			{
+				displayName: 'Done',
+				name: 'taskDone',
+				type: 'boolean',
+				default: false,
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['createTask', 'editTask'],
+					},
+				},
+				hint: 'Whether the task is completed',
+			},
+
+			{
+				displayName: 'Reminder',
+				name: 'taskReminder',
+				type: 'collection',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['createTask', 'editTask'],
+					},
+				},
+				options: [
+					{
+						displayName: 'Set Reminder',
+						name: 'isSet',
+						type: 'boolean',
+						default: false,
+					},
+					{
+						displayName: 'Reminder Date',
+						name: 'reminderDate',
+						type: 'dateTime',
+						default: '',
+						displayOptions: {
+							show: {
+								isSet: [true],
+							},
+						},
+					},
+				],
+			},
+			{
+				displayName: 'Folder ID',
+				name: 'folderId',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['createTask'],
+					},
+				},
+				hint: 'ID of the folder to create the task in',
+			},
+			{
+				displayName: 'Folder ID',
+				name: 'folderId',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['task'],
+						operation: ['getTasks'],
+					},
+				},
+				hint: 'ID of the folder to get tasks from (optional)',
+			},
+			// Notes fields for Create/Edit/Delete operations
+			{
+				displayName: 'Note ID',
+				name: 'noteId',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['notes'],
+						operation: ['deleteNote', 'editNote'],
+					},
+				},
+				hint: 'ID of the note to delete/edit',
+			},
+			{
+				displayName: 'Note Title',
+				name: 'noteTitle',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['notes'],
+						operation: ['createNote', 'editNote'],
+					},
+				},
+				hint: 'Title of the note',
+			},
+			{
+				displayName: 'Note Content',
+				name: 'noteContent',
+				type: 'string',
+				typeOptions: {
+					rows: 5,
+				},
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['notes'],
+						operation: ['createNote', 'editNote'],
+					},
+				},
+				hint: 'Content of the note',
+			},
+			{
+				displayName: 'Note Color',
+				name: 'noteColor',
+				type: 'options',
+				default: 'Pink',
+				options: [
+					{ name: 'Blue', value: 'Blue' },
+					{ name: 'Green', value: 'Green' },
+					{ name: 'Pink', value: 'Pink' },
+					{ name: 'White', value: 'White' },
+					{ name: 'Yellow', value: 'Yellow' },
+				],
+				displayOptions: {
+					show: {
+						resource: ['notes'],
+						operation: ['createNote', 'editNote'],
+					},
+				},
+				hint: 'Color of the note',
+			},
+			{
+				displayName: 'Folder ID',
+				name: 'noteFolderId',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['notes'],
+						operation: ['createNote'],
+					},
+				},
+				hint: 'ID of the folder to create the note in',
+			},
+			{
+				displayName: 'Folder ID',
+				name: 'noteFolderId',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['notes'],
+						operation: ['getNotes'],
+					},
+				},
+				hint: 'ID of the folder to get notes from (optional)',
 			},
 		] as INodeProperties[],
 	};
@@ -2579,6 +2856,335 @@ export class KerioConnectUser implements INodeType {
 						method: 'Contacts.set',
 						params: {
 							contacts: [contactData],
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else {
+					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
+				}
+			} else if (resource === 'task') {
+				if (operation === 'getTasks') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const folderId = this.getNodeParameter('folderId', i) as string;
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 11,
+						method: 'Tasks.get',
+						params: {
+							folderIds: folderId ? [folderId] : [],
+							query: {
+								limit: 500,
+								start: 0
+							}
+						}
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'createTask') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const folderId = this.getNodeParameter('folderId', i) as string;
+					const title = this.getNodeParameter('taskTitle', i) as string;
+					const description = this.getNodeParameter('taskDescription', i) as string;
+					const dueDate = this.getNodeParameter('taskDueDate', i) as string;
+					const taskDone = this.getNodeParameter('taskDone', i) as boolean;
+					const reminder = this.getNodeParameter('taskReminder', i) as {
+						isSet?: boolean;
+						reminderDate?: string;
+					};
+
+					// Format date to ISO string with timezone (YYYYMMDDTHHMMSS+HHMM format)
+					const formatDate = (dateValue: string) => {
+						if (!dateValue) return '';
+						const date = new Date(dateValue);
+						const year = date.getFullYear();
+						const month = String(date.getMonth() + 1).padStart(2, '0');
+						const day = String(date.getDate()).padStart(2, '0');
+						const hours = String(date.getHours()).padStart(2, '0');
+						const minutes = String(date.getMinutes()).padStart(2, '0');
+						const seconds = String(date.getSeconds()).padStart(2, '0');
+
+						// Get timezone offset
+						const offset = date.getTimezoneOffset();
+						const offsetHours = Math.abs(Math.floor(offset / 60));
+						const offsetMinutes = Math.abs(offset % 60);
+						const offsetSign = offset <= 0 ? '+' : '-';
+						const offsetString = `${offsetSign}${String(offsetHours).padStart(2, '0')}${String(offsetMinutes).padStart(2, '0')}`;
+
+						return `${year}${month}${day}T${hours}${minutes}${seconds}${offsetString}`;
+					};
+
+					// Build reminder object if set
+					// let reminderObj = undefined;
+					// if (reminder.isSet && reminder.reminderDate) {
+					// 	reminderObj = {
+					// 		date: formatDate(reminder.reminderDate),
+					// 		isSet: true,
+					// 		type: 'ReminderAbsolute'
+					// 	};
+					// }
+
+					const taskData = {
+						description: description || '',
+						done: taskDone ? 100 : 0,
+						due: formatDate(dueDate),
+						folderId: folderId,
+						id: '',
+						reminder: reminder.isSet && reminder.reminderDate ? {
+							date: formatDate(reminder.reminderDate),
+							isSet: true,
+							type: 'ReminderAbsolute'
+						} : undefined,
+						sortOrder: 2147483647,
+						summary: title
+					};
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 177,
+						method: 'Tasks.create',
+						params: {
+							tasks: [taskData],
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'editTask') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const taskId = this.getNodeParameter('taskId', i) as string;
+					const title = this.getNodeParameter('taskTitle', i) as string;
+					const description = this.getNodeParameter('taskDescription', i) as string;
+					const dueDate = this.getNodeParameter('taskDueDate', i) as string;
+					const taskDone = this.getNodeParameter('taskDone', i) as boolean;
+					const reminder = this.getNodeParameter('taskReminder', i) as {
+						isSet?: boolean;
+						reminderDate?: string;
+					};
+
+					// Format date to ISO string with timezone (YYYYMMDDTHHMMSS+HHMM format)
+					const formatDate = (dateValue: string) => {
+						if (!dateValue) return '';
+						const date = new Date(dateValue);
+						const year = date.getFullYear();
+						const month = String(date.getMonth() + 1).padStart(2, '0');
+						const day = String(date.getDate()).padStart(2, '0');
+						const hours = String(date.getHours()).padStart(2, '0');
+						const minutes = String(date.getMinutes()).padStart(2, '0');
+						const seconds = String(date.getSeconds()).padStart(2, '0');
+
+						// Get timezone offset
+						const offset = date.getTimezoneOffset();
+						const offsetHours = Math.abs(Math.floor(offset / 60));
+						const offsetMinutes = Math.abs(offset % 60);
+						const offsetSign = offset <= 0 ? '+' : '-';
+						const offsetString = `${offsetSign}${String(offsetHours).padStart(2, '0')}${String(offsetMinutes).padStart(2, '0')}`;
+
+						return `${year}${month}${day}T${hours}${minutes}${seconds}${offsetString}`;
+					};
+
+					const taskData = {
+						description: description || '',
+						done: taskDone ? 100 : 0,
+						due: formatDate(dueDate),
+						id: taskId,
+						reminder: reminder.isSet && reminder.reminderDate ? {
+							date: formatDate(reminder.reminderDate),
+							isSet: true,
+							type: 'ReminderAbsolute'
+						} : undefined,
+						summary: title
+					};
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 206,
+						method: 'Tasks.set',
+						params: {
+							tasks: [taskData],
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'updateTask') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const taskId = this.getNodeParameter('taskId', i) as string;
+					const title = this.getNodeParameter('taskTitle', i) as string;
+					const description = this.getNodeParameter('taskDescription', i) as string;
+					const dueDate = this.getNodeParameter('taskDueDate', i) as string;
+					const taskDone = this.getNodeParameter('taskDone', i) as boolean;
+					const reminder = this.getNodeParameter('taskReminder', i) as {
+						isSet?: boolean;
+						reminderDate?: string;
+					};
+
+					// Format date to ISO string with timezone
+					const formatDate = (dateValue: string) => {
+						if (!dateValue) return '';
+						const date = new Date(dateValue);
+						return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, '+0000');
+					};
+
+					const taskData = {
+						id: taskId,
+						watermark: 0,
+						type: 'ctTask',
+						summary: title,
+						description: description || '',
+						dueDate: formatDate(dueDate),
+						done: taskDone ? 100 : 0,
+						reminder: {
+							isSet: reminder.isSet,
+							reminderDate: reminder.reminderDate ? formatDate(reminder.reminderDate) : undefined,
+						},
+					};
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 18,
+						method: 'Tasks.set',
+						params: {
+							tasks: [taskData],
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'deleteTask') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const taskId = this.getNodeParameter('taskId', i) as string;
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 1,
+						method: 'Tasks.remove',
+						params: {
+								ids: [taskId],
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else {
+					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
+				}
+			} else if (resource === 'notes') {
+				if (operation === 'getNotes') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const folderId = this.getNodeParameter('noteFolderId', i) as string;
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						id: 37,
+						jsonrpc: '2.0',
+						method: 'Notes.get',
+						params: {
+							folderIds: folderId ? [folderId] : [],
+							query: {
+								limit: -1,
+								orderBy: [
+									{
+										caseSensitive: true,
+										columnName: 'createDate',
+										direction: 'Desc'
+									}
+								],
+								start: 0
+							}
+						}
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'createNote') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const folderId = this.getNodeParameter('noteFolderId', i) as string;
+					const title = this.getNodeParameter('noteTitle', i) as string;
+					const content = this.getNodeParameter('noteContent', i) as string;
+					const color = this.getNodeParameter('noteColor', i) as string;
+
+					const noteData = {
+						text: content || title || '',
+						position: {},
+						folderId: folderId,
+						color: color
+					};
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 40,
+						method: 'Notes.create',
+						params: {
+							notes: [noteData],
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'editNote') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const noteId = this.getNodeParameter('noteId', i) as string;
+					const title = this.getNodeParameter('noteTitle', i) as string;
+					const content = this.getNodeParameter('noteContent', i) as string;
+					const color = this.getNodeParameter('noteColor', i) as string;
+
+					const noteData = {
+						text: content || title || '',
+						id: noteId,
+						color: color
+					};
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 206,
+						method: 'Notes.set',
+						params: {
+							notes: [noteData],
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'deleteNote') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const noteId = this.getNodeParameter('noteId', i) as string;
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 1,
+						method: 'Notes.remove',
+						params: {
+							ids: [noteId],
 						},
 					};
 

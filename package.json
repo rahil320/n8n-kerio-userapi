@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-kerio-userapi",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Kerio Connect User API",
   "keywords": [
     "n8n-community-node-package"

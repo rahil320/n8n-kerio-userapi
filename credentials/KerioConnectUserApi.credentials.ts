@@ -72,7 +72,7 @@ export class KerioConnectUserApi implements ICredentialType {
           userName: '={{$credentials.username}}',
           password: '={{$credentials.password}}',
 	 application: {
-           name: 'n8n Connection test',
+           name: 'n8n kerio connect user api',
            vendor: 'Rahil Sarwar',
            version: '1.0'
 	   },
