@@ -2099,7 +2099,60 @@ export class KerioConnectUser implements INodeType {
 					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
 				}
 			} else if (resource === 'calendar') {
-				if (operation === 'getCalendarEvents') {
+				if (operation === 'createEvent') {
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const summary = this.getNodeParameter('eventSummary', i) as string;
+					const folderId = this.getNodeParameter('eventFolderId', i) as string;
+					const start = this.getNodeParameter('eventStart', i) as string;
+					const end = this.getNodeParameter('eventEnd', i) as string;
+
+					// Format date to ISO string with timezone
+					const formatDate = (dateValue: string) => {
+						const date = new Date(dateValue);
+						return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, '+0000');
+					};
+
+					// Minimal event data with only required fields
+					const eventData = {
+						summary: summary,
+						start: formatDate(start),
+						end: formatDate(end),
+						folderId: folderId,
+						watermark: 0
+					};
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 46,
+						method: 'Events.create',
+						params: {
+							events: [eventData]
+						}
+					};
+
+					try {
+						const response = await this.helpers.request!(requestOptions);
+						returnItems.push({
+							json: {
+								success: true,
+								result: response.body.result,
+								requestBody: requestOptions.body
+							}
+						});
+					} catch (error) {
+						returnItems.push({
+							json: {
+								success: false,
+								error: error.message,
+								requestBody: requestOptions.body
+							}
+						});
+						throw error;
+					}
+				} else if (operation === 'getCalendarEvents') {
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
 					const start = this.getNodeParameter('calendarStart', i) as string;
@@ -2493,157 +2546,6 @@ export class KerioConnectUser implements INodeType {
 
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
-				} else {
-					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
-				}
-			} else if (resource === 'calendar') {
-				if (operation === 'createEvent') {
-					const token = this.getNodeParameter('token', i, '') as string;
-					const cookie = this.getNodeParameter('cookie', i, '') as string;
-					const summary = this.getNodeParameter('eventSummary', i) as string;
-					const description = this.getNodeParameter('eventDescription', i) as string;
-					const location = this.getNodeParameter('eventLocation', i) as string;
-					//const start = this.getNodeParameter('eventStart', i) as string;
-					//const end = this.getNodeParameter('eventEnd', i) as string;
-					const folderId = this.getNodeParameter('eventFolderId', i) as string;
-					//const attendees = this.getNodeParameter('eventAttendees', i) as { attendees: Array<{ email: string; displayName?: string; role: string; isNotified: boolean }> };
-					const additionalOptions = this.getNodeParameter('eventAdditionalOptions', i) as {
-						isAllDay?: boolean;
-						isPrivate?: boolean;
-						freeBusy?: string;
-						eventPriority?: string;
-						travelMinutes?: number;
-						reminder?: {
-							isSet?: boolean;
-							minutesBeforeStart?: number;
-						};
-					};
-/*
-					// Format date to ISO string with timezone
-					const formatDate = (dateValue: string) => {
-						const date = new Date(dateValue);
-						return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, '+0000');
-					};
-*/
-					// Format attendees
-					/*
-					const formatAttendees = (attendeesList: Array<{ email: string; displayName?: string; role: string; isNotified: boolean }>) => {
-						return attendeesList.map((attendee) => ({
-							displayName: attendee.displayName || '',
-							emailAddress: attendee.email,
-							isNotified: attendee.isNotified,
-							role: attendee.role,
-						}));
-					};
-					*/
-					/*
-					const eventData = {
-						access: 'EAccessCreator',
-						attachments: [],
-						attendees: formatAttendees(attendees.attendees || []),
-						description: description || '',
-						descriptionHtml: '',
-						end: formatDate(end),
-						folderId,
-						freeBusy: additionalOptions.freeBusy || 'Busy',
-						isAllDay: additionalOptions.isAllDay || false,
-						isCancelled: false,
-						isPrivate: additionalOptions.isPrivate || false,
-						label: 'None',
-						location: location || '',
-						priority: additionalOptions.eventPriority || 'Normal',
-						reminder: {
-							isSet: additionalOptions.reminder?.isSet !== undefined ? additionalOptions.reminder.isSet : true,
-							minutesBeforeStart: additionalOptions.reminder?.minutesBeforeStart || 15,
-							type: 'ReminderRelative'
-						},
-						rule: {
-							isSet: false
-						},
-						start: formatDate(start),
-						summary,
-						travelMinutes: additionalOptions.travelMinutes || 0,
-						watermark: 0
-					};
-
-					*/
-					requestOptions.headers.Cookie = cookie;
-					requestOptions.headers['X-Token'] = token;
-					requestOptions.body = {
-						jsonrpc: '2.0',
-						id: 46,
-						method: 'Events.create',
-						params: {
-							//events: [eventData]
-							events: {
-								access: 'EAccessCreator',
-								attachments: [],
-								//attendees: formatAttendees(attendees.attendees || []),
-								attendees: [
-               {
-                  displayName: '',
-                  emailAddress: 'dir@sotlive.com',
-                  isNotified: false,
-                  role: 'RoleOrganizer'
-               }],
-								description: description || '',
-								descriptionHtml: '',
-								//start: formatDate(start),
-								//end: formatDate(end),
-								end: '2025-06-20T10:00:00+0000',
-								folderId: folderId,
-								freeBusy: additionalOptions.freeBusy || 'Busy',
-								isAllDay: additionalOptions.isAllDay || false,
-								isCancelled: false,
-								isPrivate: additionalOptions.isPrivate || false,
-								label: 'None',
-								location: location || '',
-								priority: additionalOptions.eventPriority || 'Normal',
-								reminder: {
-									isSet: additionalOptions.reminder?.isSet !== undefined ? additionalOptions.reminder.isSet : true,
-									minutesBeforeStart: additionalOptions.reminder?.minutesBeforeStart || 15,
-									type: 'ReminderRelative'
-								},
-								rule: {
-									isSet: false
-								},
-								//start: formatDate(start),
-								start: '2025-06-20T09:00:00+0000',
-								summary: summary,
-								travelMinutes: additionalOptions.travelMinutes || 0,
-								watermark: 0
-							}
-						}
-					};
-
-					try {
-						const response = await this.helpers.request!(requestOptions);
-						// Add debugging information
-						returnItems.push({
-							json: {
-								success: true,
-								result: response.body.result,
-								fullResponse: response.body,
-								statusCode: response.statusCode,
-								headers: response.headers,
-								requestBody: requestOptions.body,
-								requestUrl: requestOptions.url
-							}
-						});
-					} catch (error) {
-						// Add error debugging information
-						returnItems.push({
-							json: {
-								success: false,
-								error: error.message,
-								requestBody: requestOptions.body,
-								requestHeaders: requestOptions.headers,
-								requestUrl: requestOptions.url,
-								errorDetails: error
-							}
-						});
-						throw error;
-					}
 				} else {
 					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
 				}
