@@ -30,6 +30,10 @@ For all other operations (Mail, Calendar, Contacts, etc.), you'll need to:
 
 ### Example Workflow
 
+![image](https://github.com/user-attachments/assets/7312240c-18b3-4303-9232-f6ef79d4692d)
+
+
+![image](https://github.com/user-attachments/assets/deef50ee-f2f0-4ddd-b959-830879064531)
 
 
 ## Available Resources and Operations
