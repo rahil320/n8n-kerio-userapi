@@ -6,6 +6,8 @@ This repo contains Kerio Connect Collaboration Suite User Mode API (webmail clie
 
 * [Installation](#installation)  
 * [Basic Usage](#basicusage)
+* [Example Workflow](#exampleworkflow)
+* [Nodes Actions](#resources)
 * [Version history](CHANGELOG.md)  
 
 ## Installation
@@ -89,6 +91,3 @@ For all other operations (Mail, Calendar, Contacts, etc.), you'll need to:
 - **Change Password**: Change user password
 - **Get Webmail Settings**: Get webmail interface settings
 - **Set Email Settings**: Set email settings
-
-
-
