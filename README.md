@@ -36,6 +36,9 @@ For all other operations (Mail, Calendar, Contacts, etc.), you'll need to:
 ![image](https://github.com/user-attachments/assets/deef50ee-f2f0-4ddd-b959-830879064531)
 
 
+![image](https://github.com/user-attachments/assets/7c059330-a818-429d-8001-4604bcc7cf15)
+
+
 ## Available Resources and Operations
 
 ### Authentication
