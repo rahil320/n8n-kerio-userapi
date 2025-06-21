@@ -1,5 +1,3 @@
-![Banner image](https://user-images.githubusercontent.com/10284570/173569848-c624317f-42b1-45a6-ab09-f0ea3c247648.png)
-
 ![kerio-connect-userapi](https://github.com/user-attachments/assets/abe3df0a-1a3d-46a7-b5ac-c70c972e7d5d)
 
 # n8n-nodes-kerio-userapi
