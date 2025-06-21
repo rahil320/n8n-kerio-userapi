@@ -19,7 +19,9 @@ This repo contains Kerio Connect Collaboration Suite User Mode API (webmail clie
   * [Tasks](#tasks)
   * [Notes](#notes)
   * [Miscellaneous](#miscellaneous)
-* [Version history](CHANGELOG.md)  
+* [Version history](CHANGELOG.md)
+* [License](LICENSE.md)
+
 
 ## Installation
 
@@ -52,52 +54,52 @@ For all other operations (Mail, Calendar, Contacts, etc.), you'll need to:
 
 ## Available Resources and Operations
 
-### Authentication
+### 🔐 Authentication
 - **Login**: Authenticate with Kerio Connect server and get session tokens
 - **Logout**: End the current session
 
-### Auto Responder
+### 📧 Auto Responder
 - **Get Auto Responder**: Retrieve current out-of-office settings
 - **Set Auto Responder**: Enable out-of-office with custom message
 - **Set Timed Auto Responder**: Enable out-of-office with time range and message
 - **Disable Auto Responder**: Turn off out-of-office settings
 
-### Folder Management
+### 📁 Folder Management
 - **Get Folders**: Retrieve all folders
 - **Get Public Folders**: Get shared/public folders
 - **Search Folder**: Search for specific folders
 - **Create Folder**: Create a new folder
 - **Delete Folder**: Remove a folder
 
-### Mail Operations
+### 📬 Mail Operations
 - **Get Mails**: Retrieve emails from specified folder
 - **Send Mail**: Send a new email
 - **Delete Mail**: Delete emails (permanently or move to trash)
 - **Search Mail**: Search for emails using full-text search
 
-### Calendar
+### 📅 Calendar
 - **Create Event**: Create a new calendar event
 - **Get Calendar Events**: Retrieve events from a calendar folder
 
-### Contacts
+### 👥 Contacts
 - **Get Contacts**: Retrieve contacts from specified folder
 - **Create Contact**: Add a new contact
 - **Edit Contact**: Update existing contact information
 - **Delete Contact**: Remove a contact
 
-### Tasks
+### ✅ Tasks
 - **Get Tasks**: Retrieve tasks from specified folder
 - **Create Task**: Create a new task
 - **Edit Task**: Update existing task
 - **Delete Task**: Remove a task
 
-### Notes
+### 📝 Notes
 - **Get Notes**: Retrieve notes from specified folder
 - **Create Note**: Create a new note
 - **Edit Note**: Update existing note
 - **Delete Note**: Remove a note
 
-### Miscellaneous
+### ⚙️ Miscellaneous
 - **Change Webmail Color**: Update webmail interface color theme
 - **Get Account Details**: Retrieve user account information
 - **Get Quota**: Get storage quota information
