@@ -1,3 +1,28 @@
+/**
+ * Kerio Connect User Node for n8n
+ *
+ * This node provides comprehensive integration with Kerio Connect's JSON-RPC API
+ * for managing email, calendar, contacts, tasks, notes, and other user operations.
+ *
+ * RESOURCES:
+ * - Authentication: Login/logout operations for Kerio Connect
+ * - AutoResponder: Manage out-of-office autoresponder settings
+ * - Calendar: Create, retrieve, and manage calendar events
+ * - Contact: CRUD operations for contact management
+ * - Folder: Create, delete, and manage folders (mail, calendar, contact, etc.)
+ * - Mail: Send, receive, search, and manage emails
+ * - Misc: Various utility operations (password change, settings, quota, alarms)
+ * - Note: Create, edit, and manage notes
+ * - Task: Create, edit, and manage tasks
+ *
+ * AUTHENTICATION:
+ * Requires kerioConnectUserApi credentials with serverUrl, username, and password.
+ * Most operations require a valid session token and cookie from login.
+ *
+ * @author Rahil Sarwar
+ * @version 1.0
+ */
+
 import {
 	IExecuteFunctions,
 	INodeExecutionData,
@@ -28,7 +53,10 @@ export class KerioConnectUser implements INodeType {
 			},
 		],
 		properties: [
-			// Resource field
+			// ========================================
+			// RESOURCE SELECTION
+			// ========================================
+			// Main resource dropdown - determines which set of operations are available
 			{
 				displayName: 'Resource',
 				name: 'resource',
@@ -48,7 +76,11 @@ export class KerioConnectUser implements INodeType {
 				default: 'authentication',
 				required: true,
 			},
-			// Authentication Operations
+			// ========================================
+			// AUTHENTICATION RESOURCE OPERATIONS
+			// ========================================
+			// Operations: Login, Logout
+			// Purpose: Establish and terminate Kerio Connect sessions
 			{
 				displayName: 'Operation',
 				name: 'operation',
@@ -63,7 +95,11 @@ export class KerioConnectUser implements INodeType {
 				required: true,
 				displayOptions: { show: { resource: ['authentication'] } },
 			},
-			// AutoResponder Operations
+			// ========================================
+			// AUTORESPONDER RESOURCE OPERATIONS
+			// ========================================
+			// Operations: Get, Set, Set Timed, Disable
+			// Purpose: Manage out-of-office autoresponder settings
 			{
 				displayName: 'Operation',
 				name: 'operation',
@@ -74,13 +110,17 @@ export class KerioConnectUser implements INodeType {
 					{ name: 'Get AutoResponder', value: 'getAutoResponder', description: 'Get autoresponder settings', action: 'Get autoresponder settings' },
 					{ name: 'Set AutoResponder', value: 'setAutoResponder', description: 'Set autoresponder settings', action: 'Set autoresponder settings' },
 					{ name: 'Set Timed AutoResponder', value: 'setTimedAutoResponder', description: 'Set timed autoresponder settings', action: 'Set timed autoresponder settings' },
-					{ name: 'Disable AutoResponder', value: 'disableAutoResponder', action: 'Disable autoresponder' },
+					{ name: 'Disable AutoResponder', value: 'disableAutoResponder', description: 'Disable/remove autoresponder', action: 'Disable autoresponder' },
 				],
 				default: 'getAutoResponder',
 				required: true,
 				displayOptions: { show: { resource: ['autoresponder'] } },
 			},
-			// Folder Operations
+			// ========================================
+			// FOLDER RESOURCE OPERATIONS
+			// ========================================
+			// Operations: Create, Delete, Get, Get Public, Get Subscribed, Search
+			// Purpose: Manage folders for different content types (mail, calendar, contacts, etc.)
 			{
 				displayName: 'Operation',
 				name: 'operation',
@@ -99,7 +139,13 @@ export class KerioConnectUser implements INodeType {
 				required: true,
 				displayOptions: { show: { resource: ['folder'] } },
 			},
-			// Misc Operations
+			// ========================================
+			// MISC RESOURCE OPERATIONS
+			// ========================================
+			// Operations: Change Password, Change Webmail Color, Get Account Details, Get Alarm,
+			// Get Available Languages, Get Available Timezones, Get Email Settings, Get Quota,
+			// Get Webmail Settings, Set Email Settings
+			// Purpose: Various utility operations for user account management
 			{
 				displayName: 'Operation',
 				name: 'operation',
@@ -122,7 +168,10 @@ export class KerioConnectUser implements INodeType {
 				required: true,
 				displayOptions: { show: { resource: ['misc'] } },
 			},
-			// Add userStyle dropdown for Change Webmail Color
+			// ========================================
+			// WEBMAIL COLOR STYLE OPTIONS
+			// ========================================
+			// Available color themes for webmail interface
 			{
 				displayName: 'Webmail Color Style',
 				name: 'userStyle',
@@ -157,7 +206,11 @@ export class KerioConnectUser implements INodeType {
 				},
 				hint: 'Select the webmail color style',
 			},
-			// Calendar Operations
+			// ========================================
+			// CALENDAR RESOURCE OPERATIONS
+			// ========================================
+			// Operations: Create Event, Get Calendar Events, Remove Event
+			// Purpose: Manage calendar events and appointments
 			{
 				displayName: 'Operation',
 				name: 'operation',
@@ -173,7 +226,11 @@ export class KerioConnectUser implements INodeType {
 				required: true,
 				displayOptions: { show: { resource: ['calendar'] } },
 			},
-			// Mails Operations
+			// ========================================
+			// MAIL RESOURCE OPERATIONS
+			// ========================================
+			// Operations: Delete Mail, Get Mails, Search Mail, Send Mail, Set Properties
+			// Purpose: Comprehensive email management including sending, receiving, and organizing
 			{
 				displayName: 'Operation',
 				name: 'operation',
@@ -191,7 +248,11 @@ export class KerioConnectUser implements INodeType {
 				required: true,
 				displayOptions: { show: { resource: ['mails'] } },
 			},
-			// Contact Operations
+			// ========================================
+			// CONTACT RESOURCE OPERATIONS
+			// ========================================
+			// Operations: Add Contact, Delete Contact, Get Contacts, Search Contact, Update Contact
+			// Purpose: Full CRUD operations for contact management
 			{
 				displayName: 'Operation',
 				name: 'operation',
@@ -209,7 +270,11 @@ export class KerioConnectUser implements INodeType {
 				required: true,
 				displayOptions: { show: { resource: ['contact'] } },
 			},
-			// Task Operations
+			// ========================================
+			// TASK RESOURCE OPERATIONS
+			// ========================================
+			// Operations: Create Task, Delete Task, Edit Task, Get Tasks, Update Task
+			// Purpose: Full CRUD operations for task management
 			{
 				displayName: 'Operation',
 				name: 'operation',
@@ -227,7 +292,11 @@ export class KerioConnectUser implements INodeType {
 				required: true,
 				displayOptions: { show: { resource: ['task'] } },
 			},
-			// Notes Operations
+			// ========================================
+			// NOTE RESOURCE OPERATIONS
+			// ========================================
+			// Operations: Get Notes, Create Note, Edit Note, Delete Note
+			// Purpose: Manage notes for different purposes
 			{
 				displayName: 'Operation',
 				name: 'operation',
@@ -244,7 +313,10 @@ export class KerioConnectUser implements INodeType {
 				required: true,
 				displayOptions: { show: { resource: ['notes'] } },
 			},
-			// Contact fields for Add/Edit operations
+			// ========================================
+			// CONTACT FIELDS FOR ADD/EDIT OPERATIONS
+			// ========================================
+			// Fields for adding or editing a contact
 			{
 				displayName: 'Contact ID',
 				name: 'contactId',
@@ -489,7 +561,10 @@ export class KerioConnectUser implements INodeType {
 					},
 				],
 			},
-			// Folder ID field (reusable across operations)
+			// ========================================
+			// FOLDER ID FIELD (REUSABLE ACROSS OPERATIONS)
+			// ========================================
+			// Field for folder ID used in multiple operations
 			{
 				displayName: 'Folder ID',
 				name: 'folderId',
@@ -505,7 +580,10 @@ export class KerioConnectUser implements INodeType {
 				},
 				hint: 'ID of the folder to work with (optional)',
 			},
-			// Required Folder ID field for Add Contact operation
+			// ========================================
+			// REQUIRED FOLDER ID FIELD FOR ADD CONTACT OPERATION
+			// ========================================
+			// Field for folder ID required when adding a contact
 			{
 				displayName: 'Folder ID',
 				name: 'folderIdRequired',
@@ -533,7 +611,10 @@ export class KerioConnectUser implements INodeType {
 				},
 				hint: 'Search term to find contacts',
 			},
-			// Add property type selection for setProperties operation
+			// ========================================
+			// ADD PROPERTY TYPE SELECTION FOR SETPROPERTIES OPERATION
+			// ========================================
+			// Selection for setting mail properties
 			{
 				displayName: 'Property Type',
 				name: 'propertyType',
@@ -552,7 +633,10 @@ export class KerioConnectUser implements INodeType {
 				},
 				hint: 'Select the type of property to set',
 			},
-			// Add mail ID field for setProperties operation
+			// ========================================
+			// ADD MAIL ID FIELD FOR SETPROPERTIES OPERATION
+			// ========================================
+			// Field for mail ID when setting properties
 			{
 				displayName: 'Mail ID',
 				name: 'mailId',
@@ -567,7 +651,10 @@ export class KerioConnectUser implements INodeType {
 				},
 				hint: 'ID of the mail to modify',
 			},
-			// Add read/unread status field
+			// ========================================
+			// ADD READ/UNREAD STATUS FIELD
+			// ========================================
+			// Field for marking mail as read or unread
 			{
 				displayName: 'Read Status',
 				name: 'isSeen',
@@ -583,7 +670,10 @@ export class KerioConnectUser implements INodeType {
 				required: true,
 				hint: 'Set to true to mark as read, false to mark as unread',
 			},
-			// Add flag status field
+			// ========================================
+			// ADD FLAG STATUS FIELD
+			// ========================================
+			// Field for flagging mail
 			{
 				displayName: 'Flag Status',
 				name: 'isFlagged',
@@ -599,7 +689,10 @@ export class KerioConnectUser implements INodeType {
 				required: true,
 				hint: 'Set to true to flag the mail, false to unflag',
 			},
-			// Mail folder ID field
+			// ========================================
+			// MAIL FOLDER ID FIELD
+			// ========================================
+			// Field for mail folder ID
 			{
 				displayName: 'Folder ID',
 				name: 'mailFolderId',
@@ -614,7 +707,10 @@ export class KerioConnectUser implements INodeType {
 				},
 				hint: 'ID of the mail folder to get mails from',
 			},
-			// Required Mail folder ID field for Search Mail operation
+			// ========================================
+			// REQUIRED MAIL FOLDER ID FIELD FOR SEARCH MAIL OPERATION
+			// ========================================
+			// Field for mail folder ID required for search operation
 			{
 				displayName: 'Folder ID',
 				name: 'mailFolderIdRequired',
@@ -629,7 +725,10 @@ export class KerioConnectUser implements INodeType {
 				},
 				hint: 'ID of the mail folder to search in (required)',
 			},
-			// Calendar event date range fields
+			// ========================================
+			// CALENDAR EVENT DATE RANGE FIELDS
+			// ========================================
+			// Fields for calendar event date range
 			{
 				displayName: 'Start Date Time',
 				name: 'calendarStart',
@@ -672,7 +771,10 @@ export class KerioConnectUser implements INodeType {
 				required: true,
 				hint: 'ID of the calendar folder to get events from',
 			},
-			// Token and Cookie fields (required for most operations)
+			// ========================================
+			// TOKEN AND COOKIE FIELDS (REQUIRED FOR MOST OPERATIONS)
+			// ========================================
+			// Fields for session token and cookie
 			{
 				displayName: 'Token',
 				name: 'token',
@@ -788,7 +890,10 @@ export class KerioConnectUser implements INodeType {
 				required: true,
 				hint: 'Session cookie from Kerio Connect login',
 			},
-			// Password change fields
+			// ========================================
+			// PASSWORD CHANGE FIELDS
+			// ========================================
+			// Fields for changing password
 			{
 				displayName: 'Current Password',
 				name: 'currpwd',
@@ -819,7 +924,10 @@ export class KerioConnectUser implements INodeType {
 				required: true,
 				hint: 'New password',
 			},
-			// AutoResponder fields
+			// ========================================
+			// AUTORESPONDER FIELDS
+			// ========================================
+			// Fields for setting autoresponder
 			{
 				displayName: 'Message',
 				name: 'msg',
@@ -859,7 +967,10 @@ export class KerioConnectUser implements INodeType {
 				required: true,
 				hint: 'End date/time to disable autoresponder',
 			},
-			// Add a field for folder name, shown only for createFolder operation
+			// ========================================
+			// ADD A FIELD FOR FOLDER NAME, SHOWN ONLY FOR CREATEFOLDER OPERATION
+			// ========================================
+			// Field for folder name when creating a folder
 			{
 				displayName: 'Folder Name',
 				name: 'folderName',
@@ -867,14 +978,17 @@ export class KerioConnectUser implements INodeType {
 				default: '',
 				required: true,
 				displayOptions: {
-					show: {
-						resource: ['folder'],
-						operation: ['createFolder'],
+						show: {
+							resource: ['folder'],
+							operation: ['createFolder'],
+						},
 					},
-				},
 				hint: 'Name of the folder to create',
 			},
-			// Add a field for parent folder ID, shown only for createFolder operation
+			// ========================================
+			// ADD A FIELD FOR PARENT FOLDER ID, SHOWN ONLY FOR CREATEFOLDER OPERATION
+			// ========================================
+			// Field for parent folder ID when creating a folder
 			{
 				displayName: 'Parent Folder ID',
 				name: 'parentFolderId',
@@ -889,7 +1003,10 @@ export class KerioConnectUser implements INodeType {
 					},
 				},
 			},
-			// Add a field for folder ID to delete, shown only for deleteFolder operation
+			// ========================================
+			// ADD A FIELD FOR FOLDER ID TO DELETE, SHOWN ONLY FOR DELETEFOLDER OPERATION
+			// ========================================
+			// Field for folder ID when deleting a folder
 			{
 				displayName: 'Folder ID',
 				name: 'folderId',
@@ -904,7 +1021,10 @@ export class KerioConnectUser implements INodeType {
 					},
 				},
 			},
-			// Add folder type selection for searchFolder operation
+			// ========================================
+			// ADD FOLDER TYPE SELECTION FOR SEARCHFOLDER OPERATION
+			// ========================================
+			// Selection for folder type when searching
 			{
 				displayName: 'Folder Type',
 				name: 'folderType',
@@ -927,7 +1047,10 @@ export class KerioConnectUser implements INodeType {
 				},
 				hint: 'Select the type of folder to search',
 			},
-			// Add date range fields for getAlarm operation
+			// ========================================
+			// ADD DATE RANGE FIELDS FOR GETALARM OPERATION
+			// ========================================
+			// Fields for alarm date range
 			{
 				displayName: 'Start Date Time',
 				name: 'since',
@@ -956,7 +1079,10 @@ export class KerioConnectUser implements INodeType {
 				required: true,
 				hint: 'End date/time for alarm range',
 			},
-			// Add fields for Send Mail operation
+			// ========================================
+			// ADD FIELDS FOR SEND MAIL OPERATION
+			// ========================================
+			// Fields for sending mail
 			{
 				displayName: 'From Email',
 				name: 'fromEmail',
@@ -1182,7 +1308,10 @@ export class KerioConnectUser implements INodeType {
 					},
 				],
 			},
-			// Add deletion type selection for deleteMail operation
+			// ========================================
+			// ADD DELETION TYPE SELECTION FOR DELETEMAIL OPERATION
+			// ========================================
+			// Selection for deletion type
 			{
 				displayName: 'Deletion Type',
 				name: 'deletionType',
@@ -1201,7 +1330,10 @@ export class KerioConnectUser implements INodeType {
 				},
 				hint: 'Select how to delete the mail',
 			},
-			// Add mail IDs field for deleteMail operation
+			// ========================================
+			// ADD MAIL IDs FIELD FOR DELETEMAIL OPERATION
+			// ========================================
+			// Field for mail IDs when deleting mail
 			{
 				displayName: 'Mail IDs',
 				name: 'mailIds',
@@ -1234,7 +1366,10 @@ export class KerioConnectUser implements INodeType {
 					},
 				],
 			},
-			// Add trash folder ID field for deleteMail operation
+			// ========================================
+			// ADD TRASH FOLDER ID FIELD FOR DELETEMAIL OPERATION
+			// ========================================
+			// Field for trash folder ID when deleting mail
 			{
 				displayName: 'Trash Folder ID',
 				name: 'trashFolderId',
@@ -1250,7 +1385,10 @@ export class KerioConnectUser implements INodeType {
 				},
 				hint: 'ID of the Trash/Deleted Items folder',
 			},
-			// Add search query field for searchMail operation
+			// ========================================
+			// ADD SEARCH QUERY FIELD FOR SEARCHMAIL OPERATION
+			// ========================================
+			// Field for search query when searching mail
 			{
 				displayName: 'Search Query',
 				name: 'mailSearchQuery',
@@ -1265,7 +1403,10 @@ export class KerioConnectUser implements INodeType {
 				},
 				hint: 'Search term to find mails',
 			},
-			// Add event ID field for removeEvent operation
+			// ========================================
+			// ADD EVENT ID FIELD FOR REMOVEEVENT OPERATION
+			// ========================================
+			// Field for event ID when removing an event
 			{
 				displayName: 'Event ID',
 				name: 'eventId',
@@ -1280,7 +1421,10 @@ export class KerioConnectUser implements INodeType {
 				},
 				hint: 'ID of the calendar event to remove',
 			},
-			// Calendar event creation fields
+			// ========================================
+			// CALENDAR EVENT CREATION FIELDS
+			// ========================================
+			// Fields for creating a calendar event
 			{
 				displayName: 'Summary',
 				name: 'eventSummary',
@@ -1506,7 +1650,10 @@ export class KerioConnectUser implements INodeType {
 					},
 				],
 			},
-			// Task fields for Create/Edit/Update operations
+			// ========================================
+			// TASK FIELDS FOR CREATE/EDIT/UPDATE OPERATIONS
+			// ========================================
+			// Fields for creating, editing, or updating a task
 			{
 				displayName: 'Task ID',
 				name: 'taskId',
@@ -1636,7 +1783,10 @@ export class KerioConnectUser implements INodeType {
 				},
 				hint: 'ID of the folder to get tasks from (optional)',
 			},
-			// Notes fields for Create/Edit/Delete operations
+			// ========================================
+			// NOTE FIELDS FOR CREATE/EDIT/DELETE OPERATIONS
+			// ========================================
+			// Fields for creating, editing, or deleting a note
 			{
 				displayName: 'Note ID',
 				name: 'noteId',
@@ -1742,7 +1892,10 @@ export class KerioConnectUser implements INodeType {
 				},
 				hint: 'ID of the folder containing the note',
 			},
-			// Email Settings fields for Set Email Settings operation
+			// ========================================
+			// EMAIL SETTINGS FIELDS FOR SET EMAIL SETTINGS OPERATION
+			// ========================================
+			// Fields for setting email settings
 			{
 				displayName: 'Additional Options',
 				name: 'additionalOptions',
@@ -1829,21 +1982,47 @@ export class KerioConnectUser implements INodeType {
 		] as INodeProperties[],
 	};
 
+	/**
+	 * Main execution method for the Kerio Connect User node
+	 *
+	 * This method processes each input item and executes the appropriate operation
+	 * based on the selected resource and operation parameters.
+	 *
+	 * FLOW:
+	 * 1. Get credentials and setup base request options
+	 * 2. Process each input item
+	 * 3. Determine resource and operation
+	 * 4. Execute specific operation logic
+	 * 5. Return results
+	 *
+	 * AUTHENTICATION FLOW:
+	 * - Login: Establishes session and returns token/cookie
+	 * - Logout: Terminates session
+	 *
+	 * SESSION MANAGEMENT:
+	 * - Most operations require valid token and cookie from login
+	 * - Token is passed via X-Token header
+	 * - Cookie is passed via Cookie header
+	 */
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const returnItems: INodeExecutionData[] = [];
 
+		// Get Kerio Connect API credentials
 		const credentials = (await this.getCredentials('kerioConnectUserApi')) as {
 			serverUrl: string;
 			username: string;
 			password: string;
 		};
+		// Normalize server URL by removing trailing slashes
 		const serverUrl = credentials.serverUrl.replace(/\/+$/, '');
 
+		// Process each input item
 		for (let i = 0; i < items.length; i++) {
 			const resource = this.getNodeParameter('resource', i) as string;
 			const operation = this.getNodeParameter('operation', i) as string;
 
+			// Base request options for JSON-RPC API calls
 			const requestOptions: any = {
 				method: 'POST',
 				url: `${serverUrl}/webmail/api/jsonrpc/`,
@@ -1855,8 +2034,14 @@ export class KerioConnectUser implements INodeType {
 				resolveWithFullResponse: true,
 			};
 
+			// ========================================
+			// AUTHENTICATION RESOURCE HANDLING
+			// ========================================
+			// Purpose: Handle login/logout operations
+			// Methods: Session.login, Session.logout
 			if (resource === 'authentication') {
 				if (operation === 'login') {
+					// Login operation - establishes session and returns token/cookie
 					requestOptions.body = {
 						jsonrpc: '2.0',
 						id: 1,
@@ -1902,32 +2087,14 @@ export class KerioConnectUser implements INodeType {
 				} else {
 					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
 				}
-			} else if (resource === 'password') {
-				if (operation === 'changePassword') {
-					const token = this.getNodeParameter('token', i) as string;
-					const cookie = this.getNodeParameter('cookie', i) as string;
-					const currpwd = this.getNodeParameter('currpwd', i) as string;
-					const newpwd = this.getNodeParameter('newpwd', i) as string;
-
-					requestOptions.headers.Cookie = cookie;
-					requestOptions.headers['X-Token'] = token;
-					requestOptions.body = {
-						jsonrpc: '2.0',
-						id: 1,
-						method: 'Session.setPassword',
-						params: {
-							currentPassword: currpwd,
-							newPassword: newpwd,
-						},
-					};
-
-					const response = await this.helpers.request!(requestOptions);
-					returnItems.push({ json: response.body.result });
-				} else {
-					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
-				}
 			} else if (resource === 'autoresponder') {
+				// ========================================
+				// AUTORESPONDER RESOURCE HANDLING
+				// ========================================
+				// Purpose: Manage out-of-office autoresponder settings
+				// Methods: Session.getOutOfOffice, Session.setOutOfOffice
 				if (operation === 'getAutoResponder') {
+					// Get current autoresponder settings
 					const token = this.getNodeParameter('token', i) as string;
 					const cookie = this.getNodeParameter('cookie', i) as string;
 
@@ -1942,6 +2109,7 @@ export class KerioConnectUser implements INodeType {
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'setAutoResponder') {
+					// Set autoresponder with custom message (no time range)
 					const token = this.getNodeParameter('token', i) as string;
 					const cookie = this.getNodeParameter('cookie', i) as string;
 					const msg = this.getNodeParameter('msg', i) as string;
@@ -1964,6 +2132,7 @@ export class KerioConnectUser implements INodeType {
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'setTimedAutoResponder') {
+					// Set autoresponder with time range (start/end dates)
 					const token = this.getNodeParameter('token', i) as string;
 					const cookie = this.getNodeParameter('cookie', i) as string;
 					const msg = this.getNodeParameter('msg', i) as string;
@@ -1990,6 +2159,7 @@ export class KerioConnectUser implements INodeType {
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'disableAutoResponder') {
+					// Disable autoresponder completely
 					const token = this.getNodeParameter('token', i) as string;
 					const cookie = this.getNodeParameter('cookie', i) as string;
 
@@ -2013,7 +2183,13 @@ export class KerioConnectUser implements INodeType {
 					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
 				}
 			} else if (resource === 'folder') {
+				// ========================================
+				// FOLDER RESOURCE HANDLING
+				// ========================================
+				// Purpose: Manage folders for different content types (mail, calendar, contacts, etc.)
+				// Methods: Folders.get, Folders.getPublic, Folders.getSubscribed, Folders.create, Folders.removeByType
 				if (operation === 'getFolders') {
+					// Get all folders for the current user
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
 
@@ -2029,6 +2205,7 @@ export class KerioConnectUser implements INodeType {
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'searchFolder') {
+					// Search folders by type (FMail, FCalendar, FContact, etc.)
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
 					const folderType = this.getNodeParameter('folderType', i) as string;
@@ -2057,6 +2234,7 @@ export class KerioConnectUser implements INodeType {
 						returnItems.push({ json: response.body.result });
 					}
 				} else if (operation === 'getPublicFolders') {
+					// Get all public folders accessible to the user
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
 
@@ -2081,30 +2259,32 @@ export class KerioConnectUser implements INodeType {
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'getSubscribedFolders') {
+					// Get all folders the user is subscribed to
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
 
 					const requestOptions: any = {
-						method: 'POST',
-						url: `${serverUrl}/webmail/api/jsonrpc/`,
-						headers: {
-							'Content-Type': 'application/json-rpc',
-							Cookie: cookie,
-							'X-Token': token,
-						},
-						json: true,
-						resolveWithFullResponse: true,
-						body: {
-							id: 9,
-							jsonrpc: '2.0',
-							method: 'Folders.getSubscribed',
-							params: {},
-						},
-					};
+							method: 'POST',
+							url: `${serverUrl}/webmail/api/jsonrpc/`,
+							headers: {
+								'Content-Type': 'application/json-rpc',
+								Cookie: cookie,
+								'X-Token': token,
+							},
+							json: true,
+							resolveWithFullResponse: true,
+							body: {
+								id: 9,
+								jsonrpc: '2.0',
+								method: 'Folders.getSubscribed',
+								params: {},
+							},
+						};
 
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'createFolder') {
+					// Create a new folder with specified type and parent
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
 					const folderName = this.getNodeParameter('folderName', i) as string;
@@ -2196,6 +2376,7 @@ export class KerioConnectUser implements INodeType {
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'deleteFolder') {
+					// Delete a folder by ID
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
 					const folderId = this.getNodeParameter('folderId', i) as string;
@@ -2226,56 +2407,63 @@ export class KerioConnectUser implements INodeType {
 					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
 				}
 			} else if (resource === 'mails') {
+				// ========================================
+				// MAIL RESOURCE HANDLING
+				// ========================================
+				// Purpose: Comprehensive email management including sending, receiving, and organizing
+				// Methods: Mails.get, Mails.create, Mails.set, Mails.remove, Mails.move
 				if (operation === 'getMails') {
+					// Get emails from a specific folder with pagination and sorting
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
 					const folderId = this.getNodeParameter('mailFolderId', i) as string;
 
-					requestOptions.headers.Cookie = cookie;
-					requestOptions.headers['X-Token'] = token;
-					requestOptions.body = {
-						id: 72,
-						jsonrpc: '2.0',
-						method: 'Mails.get',
-						params: {
-							folderIds: [folderId],
-							query: {
-								fields: [
-									'id',
-									'from',
-									'to',
-									'subject',
-									'receiveDate',
-									'modifiedDate',
-									'sendDate',
-									'isSeen',
-									'isJunk',
-									'isAnswered',
-									'isForwarded',
-									'isFlagged',
-									'isReadOnly',
-									'isDraft',
-									'folderId',
-									'hasAttachment',
-									'priority',
-									'size'
-								],
-								limit: 50,
-								orderBy: [
-									{
-										caseSensitive: true,
-										columnName: 'receiveDate',
-										direction: 'Desc'
-									}
-								],
-								start: 0
+						requestOptions.headers.Cookie = cookie;
+						requestOptions.headers['X-Token'] = token;
+						requestOptions.body = {
+							id: 72,
+							jsonrpc: '2.0',
+							method: 'Mails.get',
+							params: {
+								folderIds: [folderId],
+								query: {
+									fields: [
+										'id',
+										'from',
+										'to',
+										'subject',
+										'receiveDate',
+										'modifiedDate',
+										'sendDate',
+										'isSeen',
+										'isJunk',
+										'isAnswered',
+										'isForwarded',
+										'isFlagged',
+										'isReadOnly',
+										'isDraft',
+										'folderId',
+										'hasAttachment',
+										'priority',
+										'size'
+									],
+									limit: 50,
+									orderBy: [
+										{
+											caseSensitive: true,
+											columnName: 'receiveDate',
+											direction: 'Desc'
+										}
+									],
+									start: 0
+								}
 							}
-						}
-					};
+						};
 
-					const response = await this.helpers.request!(requestOptions);
-					returnItems.push({ json: response.body.result });
+						const response = await this.helpers.request!(requestOptions);
+						returnItems.push({ json: response.body.result });
 				} else if (operation === 'setProperties') {
+					// Set mail properties like read/unread status or flag status
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
 					const mailId = this.getNodeParameter('mailId', i) as string;
@@ -2307,6 +2495,7 @@ export class KerioConnectUser implements INodeType {
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'sendMail') {
+					// Send a new email with recipients, subject, content, and optional settings
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
 					const fromEmail = this.getNodeParameter('fromEmail', i) as string;
@@ -2324,7 +2513,7 @@ export class KerioConnectUser implements INodeType {
 						isMDNSent?: boolean;
 					};
 
-					// Format recipients
+					// Format recipients for API
 					const formatRecipients = (recipients: Array<{ email: string; name?: string }>) => {
 						return recipients.map((recipient) => ({
 							address: recipient.email,
@@ -2382,6 +2571,7 @@ export class KerioConnectUser implements INodeType {
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'deleteMail') {
+					// Delete emails by moving to trash or permanent deletion
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
 					const deletionType = this.getNodeParameter('deletionType', i) as string;
@@ -2394,6 +2584,7 @@ export class KerioConnectUser implements INodeType {
 					requestOptions.headers['X-Token'] = token;
 
 					if (deletionType === 'permanentDelete') {
+						// Permanent deletion
 						requestOptions.body = {
 							jsonrpc: '2.0',
 							id: 60,
@@ -2419,6 +2610,7 @@ export class KerioConnectUser implements INodeType {
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'searchMail') {
+					// Search for emails using full-text search within a folder
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
 					const searchQuery = this.getNodeParameter('mailSearchQuery', i) as string;
@@ -2479,7 +2671,14 @@ export class KerioConnectUser implements INodeType {
 					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
 				}
 			} else if (resource === 'misc') {
+				// ========================================
+				// MISC RESOURCE HANDLING
+				// ========================================
+				// Purpose: Various utility operations for user account management
+				// Methods: Session.setPassword, Session.setSettings, Session.getSettings, Session.whoAmI,
+				// Session.getAvailableLanguages, Session.getAvailableTimeZones, Session.getQuotaInformation, Alarms.get
 				if (operation === 'changePassword') {
+					// Change user account password
 					const token = this.getNodeParameter('token', i) as string;
 					const cookie = this.getNodeParameter('cookie', i) as string;
 					const currpwd = this.getNodeParameter('currpwd', i) as string;
@@ -2500,6 +2699,7 @@ export class KerioConnectUser implements INodeType {
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'changeWebmailColor') {
+					// Change webmail interface color theme
 					const token = this.getNodeParameter('token', i) as string;
 					const cookie = this.getNodeParameter('cookie', i) as string;
 					const userStyle = this.getNodeParameter('userStyle', i) as string;
@@ -2522,6 +2722,7 @@ export class KerioConnectUser implements INodeType {
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'getAccountDetails') {
+					// Get current user account details
 					const token = this.getNodeParameter('token', i) as string;
 					const cookie = this.getNodeParameter('cookie', i) as string;
 
@@ -2537,6 +2738,7 @@ export class KerioConnectUser implements INodeType {
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'getAvailableLanguages') {
+					// Get list of available languages for webmail interface
 					const token = this.getNodeParameter('token', i) as string;
 					const cookie = this.getNodeParameter('cookie', i) as string;
 
@@ -2552,6 +2754,7 @@ export class KerioConnectUser implements INodeType {
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'getAvailableTimezones') {
+					// Get list of available timezones for webmail interface
 					const token = this.getNodeParameter('token', i) as string;
 					const cookie = this.getNodeParameter('cookie', i) as string;
 
@@ -2567,6 +2770,7 @@ export class KerioConnectUser implements INodeType {
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'getEmailSettings') {
+					// Get current email settings for the user
 					const token = this.getNodeParameter('token', i) as string;
 					const cookie = this.getNodeParameter('cookie', i) as string;
 
@@ -2621,6 +2825,7 @@ export class KerioConnectUser implements INodeType {
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'getWebmailSettings') {
+					// Get webmail interface settings (language, timezone, date format, etc.)
 					const token = this.getNodeParameter('token', i) as string;
 					const cookie = this.getNodeParameter('cookie', i) as string;
 
@@ -2664,6 +2869,7 @@ export class KerioConnectUser implements INodeType {
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'setEmailSettings') {
+					// Set email settings (signature, read receipts, page size, etc.)
 					const token = this.getNodeParameter('token', i) as string;
 					const cookie = this.getNodeParameter('cookie', i) as string;
 					const additionalOptions = this.getNodeParameter('additionalOptions', i) as {
@@ -2725,6 +2931,7 @@ export class KerioConnectUser implements INodeType {
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'getQuota') {
+					// Get mailbox quota information
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
 
@@ -2739,6 +2946,7 @@ export class KerioConnectUser implements INodeType {
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'getAlarm') {
+					// Get alarms within a specified time range
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
 					const since = this.getNodeParameter('since', i) as string;
@@ -2762,7 +2970,13 @@ export class KerioConnectUser implements INodeType {
 					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
 				}
 			} else if (resource === 'calendar') {
+				// ========================================
+				// CALENDAR RESOURCE HANDLING
+				// ========================================
+				// Purpose: Manage calendar events and appointments
+				// Methods: Events.create, Occurrences.get, Occurrences.remove
 				if (operation === 'createEvent') {
+					// Create a new calendar event with attendees, reminders, and optional settings
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
 					const summary = this.getNodeParameter('eventSummary', i) as string;
@@ -2790,7 +3004,7 @@ export class KerioConnectUser implements INodeType {
 						return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, '+0000');
 					};
 
-					// Format attendees
+					// Format attendees for API
 					const formatAttendees = (attendeesList: Array<{ email: string; displayName?: string; role: string; isNotified: boolean }>) => {
 						return attendeesList.map((attendee) => ({
 							displayName: attendee.displayName || '',
@@ -2854,6 +3068,7 @@ export class KerioConnectUser implements INodeType {
 						throw error;
 					}
 				} else if (operation === 'getCalendarEvents') {
+					// Get calendar events within a specified time range
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
 					const start = this.getNodeParameter('calendarStart', i) as string;
@@ -2899,6 +3114,7 @@ export class KerioConnectUser implements INodeType {
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
 				} else if (operation === 'removeEvent') {
+					// Remove a calendar event by ID
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
 					const eventId = this.getNodeParameter('eventId', i) as string;
@@ -2925,6 +3141,11 @@ export class KerioConnectUser implements INodeType {
 					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
 				}
 			} else if (resource === 'contact') {
+				// ========================================
+				// CONTACT RESOURCE HANDLING
+				// ========================================
+				// Purpose: Full CRUD operations for contact management
+				// Methods: Contacts.getFromCache, Contacts.create, Contacts.set, Contacts.remove
 				if (operation === 'getContacts') {
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
@@ -3251,6 +3472,11 @@ export class KerioConnectUser implements INodeType {
 					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
 				}
 			} else if (resource === 'task') {
+				// ========================================
+				// TASK RESOURCE HANDLING
+				// ========================================
+				// Purpose: Full CRUD operations for task management
+				// Methods: Tasks.get, Tasks.create, Tasks.set, Tasks.remove
 				if (operation === 'getTasks') {
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
@@ -3465,6 +3691,11 @@ export class KerioConnectUser implements INodeType {
 					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
 				}
 			} else if (resource === 'notes') {
+				// ========================================
+				// NOTES RESOURCE HANDLING
+				// ========================================
+				// Purpose: Manage notes for different purposes
+				// Methods: Notes.get, Notes.create, Notes.set, Notes.remove
 				if (operation === 'getNotes') {
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
