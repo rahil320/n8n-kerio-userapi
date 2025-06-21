@@ -43,7 +43,6 @@ export class KerioConnectUser implements INodeType {
 					{ name: 'Mail', value: 'mails', description: 'Mail management' },
 					{ name: 'Misc', value: 'misc', description: 'Misc operations' },
 					{ name: 'Note', value: 'notes', description: 'Notes management' },
-					{ name: 'Password', value: 'password', description: 'Password management' },
 					{ name: 'Task', value: 'task', description: 'Task management' },
 				],
 				default: 'authentication',
@@ -63,20 +62,6 @@ export class KerioConnectUser implements INodeType {
 				default: 'login',
 				required: true,
 				displayOptions: { show: { resource: ['authentication'] } },
-			},
-			// Password Operations
-			{
-				displayName: 'Operation',
-				name: 'operation',
-				type: 'options',
-				noDataExpression: true,
-				hint: 'Manage email account password',
-				options: [
-					{ name: 'Change Password', value: 'changePassword', description: 'Change email account password', action: 'Change email account password' },
-				],
-				default: 'changePassword',
-				required: true,
-				displayOptions: { show: { resource: ['password'] } },
 			},
 			// AutoResponder Operations
 			{
@@ -122,12 +107,55 @@ export class KerioConnectUser implements INodeType {
 				noDataExpression: true,
 				hint: 'Manage misc operations',
 				options: [
-					{ name: 'Get Quota', value: 'getQuota', description: 'Get mailbox quota information', action: 'Get mailbox quota' },
+					{ name: 'Change Password', value: 'changePassword', description: 'Change email account password', action: 'Change email account password' },
+					{ name: 'Change Webmail Color', value: 'changeWebmailColor', description: 'Change webmail color theme', action: 'Change webmail color theme' },
+					{ name: 'Get Account Details', value: 'getAccountDetails', description: 'Get account details of the current user', action: 'Get account details' },
 					{ name: 'Get Alarm', value: 'getAlarm', description: 'Get alarms within a time range', action: 'Get alarms within a time range' },
+					{ name: 'Get Available Languages', value: 'getAvailableLanguages', description: 'Get available languages for webmail', action: 'Get available languages' },
+					{ name: 'Get Available Timezones', value: 'getAvailableTimezones', description: 'Get available timezones for webmail', action: 'Get available timezones' },
+					{ name: 'Get Email Settings', value: 'getEmailSettings', description: 'Get email settings for the current user', action: 'Get email settings' },
+					{ name: 'Get Quota', value: 'getQuota', description: 'Get mailbox quota information', action: 'Get mailbox quota' },
+					{ name: 'Get Webmail Settings', value: 'getWebmailSettings', description: 'Get webmail settings for the current user', action: 'Get webmail settings' },
+					{ name: 'Set Email Settings', value: 'setEmailSettings', description: 'Set email receipt settings', action: 'Set email settings' },
 				],
 				default: 'getQuota',
 				required: true,
 				displayOptions: { show: { resource: ['misc'] } },
+			},
+			// Add userStyle dropdown for Change Webmail Color
+			{
+				displayName: 'Webmail Color Style',
+				name: 'userStyle',
+				type: 'options',
+				options: [
+					{ name: 'Black', value: 'webmail2color-121212' },
+					{ name: 'Blue', value: 'webmail2' },
+					{ name: 'Brown', value: 'webmail2color-753802' },
+					{ name: 'Dark Green', value: 'webmail2color-548C00' },
+					{ name: 'Dark Grey', value: 'webmail2color-424242' },
+					{ name: 'Dark Maroon', value: 'webmail2color-54071A' },
+					{ name: 'Dark Orange', value: 'webmail2color-BE5D0F' },
+					{ name: 'Dark Pink', value: 'webmail2color-C42790' },
+					{ name: 'Dark Purple', value: 'webmail2color-6E237C' },
+					{ name: 'Light Green', value: 'webmail2color-5DB559' },
+					{ name: 'Light Grey', value: 'webmail2color-808080' },
+					{ name: 'Light Maroon', value: 'webmail2color-A60000' },
+					{ name: 'Light Orange', value: 'webmail2color-CF6666' },
+					{ name: 'Light Pink', value: 'webmail2color-CE64A3' },
+					{ name: 'Light Purple', value: 'webmail2color-7F7FC7' },
+					{ name: 'Navy Blue', value: 'webmail2color-133D69' },
+					{ name: 'Turquoise', value: 'webmail2color-2EC9B7' },
+					{ name: 'X-Dark Green', value: 'webmail2color-063900' },
+				],
+				default: 'webmail2',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['misc'],
+						operation: ['changeWebmailColor'],
+					},
+				},
+				hint: 'Select the webmail color style',
 			},
 			// Calendar Operations
 			{
@@ -656,6 +684,8 @@ export class KerioConnectUser implements INodeType {
 						operation: [
 							'logout',
 							'changePassword',
+							'changeWebmailColor',
+							'getAccountDetails',
 							'getAutoResponder',
 							'setAutoResponder',
 							'setTimedAutoResponder',
@@ -667,6 +697,11 @@ export class KerioConnectUser implements INodeType {
 							'deleteFolder',
 							'getQuota',
 							'getAlarm',
+							'getAvailableLanguages',
+							'getAvailableTimezones',
+							'getEmailSettings',
+							'getWebmailSettings',
+							'setEmailSettings',
 							'createEvent',
 							'getCalendarEvents',
 							'removeEvent',
@@ -706,6 +741,8 @@ export class KerioConnectUser implements INodeType {
 						operation: [
 							'logout',
 							'changePassword',
+							'changeWebmailColor',
+							'getAccountDetails',
 							'getAutoResponder',
 							'setAutoResponder',
 							'setTimedAutoResponder',
@@ -717,6 +754,11 @@ export class KerioConnectUser implements INodeType {
 							'deleteFolder',
 							'getQuota',
 							'getAlarm',
+							'getAvailableLanguages',
+							'getAvailableTimezones',
+							'getEmailSettings',
+							'getWebmailSettings',
+							'setEmailSettings',
 							'createEvent',
 							'getCalendarEvents',
 							'removeEvent',
@@ -755,6 +797,7 @@ export class KerioConnectUser implements INodeType {
 				default: '',
 				displayOptions: {
 					show: {
+						resource: ['misc'],
 						operation: ['changePassword'],
 					},
 				},
@@ -769,6 +812,7 @@ export class KerioConnectUser implements INodeType {
 				default: '',
 				displayOptions: {
 					show: {
+						resource: ['misc'],
 						operation: ['changePassword'],
 					},
 				},
@@ -1074,7 +1118,6 @@ export class KerioConnectUser implements INodeType {
 					rows: 5,
 				},
 				default: '',
-				required: true,
 				displayOptions: {
 					show: {
 						resource: ['mails'],
@@ -1684,6 +1727,104 @@ export class KerioConnectUser implements INodeType {
 					},
 				},
 				hint: 'ID of the folder to get notes from (optional)',
+			},
+			{
+				displayName: 'Folder ID',
+				name: 'noteFolderId',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['notes'],
+						operation: ['editNote'],
+					},
+				},
+				hint: 'ID of the folder containing the note',
+			},
+			// Email Settings fields for Set Email Settings operation
+			{
+				displayName: 'Additional Options',
+				name: 'additionalOptions',
+				type: 'collection',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['misc'],
+						operation: ['setEmailSettings'],
+					},
+				},
+				options: [
+					{
+						displayName: 'Allow Remote Images',
+						name: 'mailImgAllowRemote',
+						type: 'boolean',
+						default: false,
+						 hint: 'Allow remote images in emails',
+					},
+					{
+						displayName: 'Delivery Receipt',
+						name: 'deliveryReceipt',
+						type: 'boolean',
+						default: false,
+						 hint: 'Enable or disable delivery receipts',
+					},
+					{
+						displayName: 'Email Preview Place',
+						name: 'emailPreviewPlace',
+						type: 'string',
+						default: '',
+						 hint: 'Location of the email preview pane',
+					},
+					{
+						displayName: 'Mail Signature',
+						name: 'mailSignature',
+						type: 'string',
+						default: '',
+						 hint: 'Signature for outgoing emails',
+					},
+					{
+						displayName: 'Mark as Read',
+						name: 'mailMarkAsRead',
+						type: 'boolean',
+						default: false,
+						 hint: 'Automatically mark emails as read',
+					},
+					{
+						displayName: 'Mark as Read Delay',
+						name: 'mailMarkAsReadDelay',
+						type: 'number',
+						default: 0,
+						 hint: 'Delay in milliseconds before marking as read',
+					},
+					{
+						displayName: 'Page Size',
+						name: 'pageSize',
+						type: 'options',
+						default: 50,
+						options: [
+							{ name: '50', value: 50 },
+							{ name: '100', value: 100 },
+							{ name: '250', value: 250 },
+							{ name: '500', value: 500 },
+						],
+						hint: 'Number of emails per page',
+					},
+					{
+						displayName: 'Read Receipt',
+						name: 'readReceipt',
+						type: 'boolean',
+						default: false,
+						 hint: 'Enable or disable read receipts',
+					},
+					{
+						displayName: 'Select First Email',
+						name: 'selectFirstEmail',
+						type: 'boolean',
+						default: false,
+						 hint: 'Automatically select the first email',
+					},
+				],
 			},
 		] as INodeProperties[],
 	};
@@ -2338,7 +2479,252 @@ export class KerioConnectUser implements INodeType {
 					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
 				}
 			} else if (resource === 'misc') {
-				if (operation === 'getQuota') {
+				if (operation === 'changePassword') {
+					const token = this.getNodeParameter('token', i) as string;
+					const cookie = this.getNodeParameter('cookie', i) as string;
+					const currpwd = this.getNodeParameter('currpwd', i) as string;
+					const newpwd = this.getNodeParameter('newpwd', i) as string;
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 1,
+						method: 'Session.setPassword',
+						params: {
+							currentPassword: currpwd,
+							newPassword: newpwd,
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'changeWebmailColor') {
+					const token = this.getNodeParameter('token', i) as string;
+					const cookie = this.getNodeParameter('cookie', i) as string;
+					const userStyle = this.getNodeParameter('userStyle', i) as string;
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 32,
+						method: 'Session.setSettings',
+						params: {
+							settings: {
+								webmail: {
+									userStyle,
+								},
+							},
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'getAccountDetails') {
+					const token = this.getNodeParameter('token', i) as string;
+					const cookie = this.getNodeParameter('cookie', i) as string;
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						id: 7,
+						jsonrpc: '2.0',
+						method: 'Session.whoAmI',
+						params: {},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'getAvailableLanguages') {
+					const token = this.getNodeParameter('token', i) as string;
+					const cookie = this.getNodeParameter('cookie', i) as string;
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						id: 24,
+						jsonrpc: '2.0',
+						method: 'Session.getAvailableLanguages',
+						params: {},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'getAvailableTimezones') {
+					const token = this.getNodeParameter('token', i) as string;
+					const cookie = this.getNodeParameter('cookie', i) as string;
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						id: 23,
+						jsonrpc: '2.0',
+						method: 'Session.getAvailableTimeZones',
+						params: {},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'getEmailSettings') {
+					const token = this.getNodeParameter('token', i) as string;
+					const cookie = this.getNodeParameter('cookie', i) as string;
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						id: 22,
+						jsonrpc: '2.0',
+						method: 'Session.getSettings',
+						params: {
+							query: [
+								[
+									'webmail',
+									'mailSignature'
+								],
+								[
+									'webmail',
+									'mailMarkAsRead'
+								],
+								[
+									'webmail',
+									'mailMarkAsReadDelay'
+								],
+								[
+									'webmail',
+									'mailImgAllowRemote'
+								],
+								[
+									'webmail',
+									'emailPreviewPlace'
+								],
+								[
+									'webmail',
+									'readReceipt'
+								],
+								[
+									'webmail',
+									'deliveryReceipt'
+								],
+								[
+									'webmail',
+									'pageSize'
+								],
+								[
+									'webmail',
+									'selectFirstEmail'
+								]
+							]
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'getWebmailSettings') {
+					const token = this.getNodeParameter('token', i) as string;
+					const cookie = this.getNodeParameter('cookie', i) as string;
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						id: 25,
+						jsonrpc: '2.0',
+						method: 'Session.getSettings',
+						params: {
+
+							query: [
+								[
+									'webmail',
+									'lang'
+								],
+								[
+									'webmail',
+									'timeZone'
+								],
+								[
+									'webmail',
+									'timeFormat'
+								],
+								[
+									'webmail',
+									'dateFormat'
+								],
+								[
+									'webmail',
+									'langExtension'
+								],
+								[
+									'webmail',
+									'firstWeekDay'
+								]
+							]
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'setEmailSettings') {
+					const token = this.getNodeParameter('token', i) as string;
+					const cookie = this.getNodeParameter('cookie', i) as string;
+					const additionalOptions = this.getNodeParameter('additionalOptions', i) as {
+						mailSignature?: string;
+						mailMarkAsRead?: boolean;
+						mailMarkAsReadDelay?: number;
+						mailImgAllowRemote?: boolean;
+						emailPreviewPlace?: string;
+						readReceipt?: boolean;
+						deliveryReceipt?: boolean;
+						pageSize?: number;
+						selectFirstEmail?: boolean;
+					};
+
+					// Build webmail settings object with only user-selected fields
+					const webmailSettings: any = {};
+
+					if (additionalOptions.mailSignature !== undefined) {
+						webmailSettings.mailSignature = additionalOptions.mailSignature;
+					}
+					if (additionalOptions.mailMarkAsRead !== undefined) {
+						webmailSettings.mailMarkAsRead = additionalOptions.mailMarkAsRead;
+					}
+					if (additionalOptions.mailMarkAsReadDelay !== undefined) {
+						webmailSettings.mailMarkAsReadDelay = additionalOptions.mailMarkAsReadDelay;
+					}
+					if (additionalOptions.mailImgAllowRemote !== undefined) {
+						webmailSettings.mailImgAllowRemote = additionalOptions.mailImgAllowRemote;
+					}
+					if (additionalOptions.emailPreviewPlace !== undefined) {
+						webmailSettings.emailPreviewPlace = additionalOptions.emailPreviewPlace;
+					}
+					if (additionalOptions.readReceipt !== undefined) {
+						webmailSettings.readReceipt = additionalOptions.readReceipt;
+					}
+					if (additionalOptions.deliveryReceipt !== undefined) {
+						webmailSettings.deliveryReceipt = additionalOptions.deliveryReceipt;
+					}
+					if (additionalOptions.pageSize !== undefined) {
+						webmailSettings.pageSize = additionalOptions.pageSize;
+					}
+					if (additionalOptions.selectFirstEmail !== undefined) {
+						webmailSettings.selectFirstEmail = additionalOptions.selectFirstEmail;
+					}
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 19,
+						method: 'Session.setSettings',
+						params: {
+							settings: {
+								webmail: webmailSettings,
+							},
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'getQuota') {
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
 
@@ -2921,15 +3307,6 @@ export class KerioConnectUser implements INodeType {
 						return `${year}${month}${day}T${hours}${minutes}${seconds}${offsetString}`;
 					};
 
-					// Build reminder object if set
-					// let reminderObj = undefined;
-					// if (reminder.isSet && reminder.reminderDate) {
-					// 	reminderObj = {
-					// 		date: formatDate(reminder.reminderDate),
-					// 		isSet: true,
-					// 		type: 'ReminderAbsolute'
-					// 	};
-					// }
 
 					const taskData = {
 						description: description || '',
@@ -3152,18 +3529,48 @@ export class KerioConnectUser implements INodeType {
 					const title = this.getNodeParameter('noteTitle', i) as string;
 					const content = this.getNodeParameter('noteContent', i) as string;
 					const color = this.getNodeParameter('noteColor', i) as string;
+					const folderId = this.getNodeParameter('noteFolderId', i) as string;
+
+					// Format current date to ISO string with timezone (YYYYMMDDTHHMMSS+HHMM format)
+					const formatDate = () => {
+						const date = new Date();
+						const year = date.getFullYear();
+						const month = String(date.getMonth() + 1).padStart(2, '0');
+						const day = String(date.getDate()).padStart(2, '0');
+						const hours = String(date.getHours()).padStart(2, '0');
+						const minutes = String(date.getMinutes()).padStart(2, '0');
+						const seconds = String(date.getSeconds()).padStart(2, '0');
+
+						// Get timezone offset
+						const offset = date.getTimezoneOffset();
+						const offsetHours = Math.abs(Math.floor(offset / 60));
+						const offsetMinutes = Math.abs(offset % 60);
+						const offsetSign = offset <= 0 ? '+' : '-';
+						const offsetString = `${offsetSign}${String(offsetHours).padStart(2, '0')}${String(offsetMinutes).padStart(2, '0')}`;
+
+						return `${year}${month}${day}T${hours}${minutes}${seconds}${offsetString}`;
+					};
 
 					const noteData = {
-						text: content || title || '',
+						color: color,
+						folderId: folderId,
 						id: noteId,
-						color: color
+						modifyDate: formatDate(),
+						position: {
+							xOffset: 0,
+							xSize: 0,
+							yOffset: 0,
+							ySize: 0
+						},
+						text: content || title || '',
+						watermark: 0
 					};
 
 					requestOptions.headers.Cookie = cookie;
 					requestOptions.headers['X-Token'] = token;
 					requestOptions.body = {
 						jsonrpc: '2.0',
-						id: 206,
+						id: 19,
 						method: 'Notes.set',
 						params: {
 							notes: [noteData],
