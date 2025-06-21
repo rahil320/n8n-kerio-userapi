@@ -4,16 +4,27 @@
 
 This repo contains Kerio Connect Collaboration Suite User Mode API (webmail client) nodes to help you connect and perform custom integrations for [n8n](https://n8n.io). It includes the nodes and operations for majority of the actions that you can perform using the Kerio Webmail client.
 
+## Table of Contents
+
 * [Installation](#installation)  
-* [Basic Usage](#basicusage)
-* [Example Workflow](#exampleworkflow)
-* [Nodes Actions](#resources)
+* [Basic Usage](#basic-usage)
+* [Example Workflow](#example-workflow)
+* [Available Resources and Operations](#available-resources-and-operations)
+  * [Authentication](#authentication)
+  * [Auto Responder](#auto-responder)
+  * [Folder Management](#folder-management)
+  * [Mail Operations](#mail-operations)
+  * [Calendar](#calendar)
+  * [Contacts](#contacts)
+  * [Tasks](#tasks)
+  * [Notes](#notes)
+  * [Miscellaneous](#miscellaneous)
 * [Version history](CHANGELOG.md)  
 
 ## Installation
 
 Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation.
-#basicusage
+
 ## Basic Usage
 
 ### 1. Authentication Setup
@@ -28,7 +39,7 @@ For all other operations (Mail, Calendar, Contacts, etc.), you'll need to:
 - Use the **token** and **cookie** values from the Login node's output
 - Pass these credentials to subsequent Kerio Connect User nodes
 
-### Example Workflow
+## Example Workflow
 
 ![image](https://github.com/user-attachments/assets/7312240c-18b3-4303-9232-f6ef79d4692d)
 
@@ -85,7 +96,6 @@ For all other operations (Mail, Calendar, Contacts, etc.), you'll need to:
 - **Create Note**: Create a new note
 - **Edit Note**: Update existing note
 - **Delete Note**: Remove a note
-
 
 ### Miscellaneous
 - **Change Webmail Color**: Update webmail interface color theme
