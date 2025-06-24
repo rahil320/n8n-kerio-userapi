@@ -2013,6 +2013,7 @@ export class KerioConnectUser implements INodeType {
 			serverUrl: string;
 			username: string;
 			password: string;
+			ignoreSSL?: boolean;
 		};
 		// Normalize server URL by removing trailing slashes
 		const serverUrl = credentials.serverUrl.replace(/\/+$/, '');
@@ -2033,6 +2034,11 @@ export class KerioConnectUser implements INodeType {
 				json: true,
 				resolveWithFullResponse: true,
 			};
+
+			// Apply SSL configuration if ignoreSSL is enabled
+			if (credentials.ignoreSSL) {
+				requestOptions.rejectUnauthorized = false;
+			}
 
 			// ========================================
 			// AUTHENTICATION RESOURCE HANDLING

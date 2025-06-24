@@ -1,19 +1,30 @@
 {
   "name": "n8n-nodes-kerio-userapi",
-  "version": "1.0.0",
-  "description": "Kerio Connect User API",
+  "version": "1.0.1",
+  "description": "Kerio Connect User API nodes for n8n - Comprehensive integration with Kerio Connect's JSON-RPC API for managing email, calendar, contacts, tasks, notes, and other user operations",
   "keywords": [
-    "n8n-community-node-package"
+    "n8n-community-node-package",
+    "kerio-connect",
+    "email",
+    "calendar",
+    "contacts",
+    "tasks",
+    "notes",
+    "webmail",
+    "json-rpc"
   ],
   "license": "MIT",
-  "homepage": "",
+  "homepage": "https://github.com/rahil320/n8n-kerio-userapi#readme",
   "author": {
     "name": "Rahil Sarwar",
     "email": "rahil320@yahoo.com"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/rahil320/n8n-kerio-userapi.git"
+    "url": "git+https://github.com/rahil320/n8n-kerio-userapi.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rahil320/n8n-kerio-userapi/issues"
   },
   "engines": {
     "node": ">=20.15"

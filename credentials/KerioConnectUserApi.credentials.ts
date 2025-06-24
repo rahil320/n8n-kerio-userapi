@@ -2,6 +2,7 @@
  * credentials/KerioConnectUserApi.credentials.ts
  * Simple credential type: server URL, user, password
  * Includes a 5s timeout on the Test Credentials call.
+ * Supports ignoring SSL errors for self-signed certificates.
  *********************************************************************/
 
 import {
@@ -42,6 +43,13 @@ export class KerioConnectUserApi implements ICredentialType {
       typeOptions: { password: true },
       default: '',
       hint: 'Kerio Connect user email password.',
+    },
+    {
+      displayName: 'Ignore SSL Errors',
+      name: 'ignoreSSL',
+      type: 'boolean',
+      default: false,
+      hint: 'Enable this option if your server uses a self-signed certificate.',
     },
   ];
 
