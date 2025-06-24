@@ -16,6 +16,7 @@ This repo contains Kerio Connect Collaboration Suite User Mode API (webmail clie
   * [Mail Operations](#mail-operations)
   * [Calendar](#calendar)
   * [Contacts](#contacts)
+  * [Delegation](#delegation)
   * [Tasks](#tasks)
   * [Notes](#notes)
   * [Miscellaneous](#miscellaneous)
@@ -86,6 +87,13 @@ For all other operations (Mail, Calendar, Contacts, etc.), you'll need to:
 - **Create Contact**: Add a new contact
 - **Edit Contact**: Update existing contact information
 - **Delete Contact**: Remove a contact
+
+### 🤝 Delegation
+- **Get Active Delegation**: Retrieve current delegation users
+- **Get Users for Delegation**: Get available users, groups, and domains for delegation
+- **Add Delegate Users**: Add new delegates to the delegation list
+- **Remove All Delegates**: Clear all delegates from the delegation list
+- **Remove Selected Delegate**: Remove specific delegates by their user IDs
 
 ### ✅ Tasks
 - **Get Tasks**: Retrieve tasks from specified folder
