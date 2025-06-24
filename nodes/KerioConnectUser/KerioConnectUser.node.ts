@@ -9,6 +9,7 @@
  * - AutoResponder: Manage out-of-office autoresponder settings
  * - Calendar: Create, retrieve, and manage calendar events
  * - Contact: CRUD operations for contact management
+ * - Delegation: Manage delegation settings
  * - Folder: Create, delete, and manage folders (mail, calendar, contact, etc.)
  * - Mail: Send, receive, search, and manage emails
  * - Misc: Various utility operations (password change, settings, quota, alarms)
@@ -67,6 +68,7 @@ export class KerioConnectUser implements INodeType {
 					{ name: 'AutoResponder', value: 'autoresponder', description: 'AutoResponder management' },
 					{ name: 'Calendar', value: 'calendar', description: 'Calendar management' },
 					{ name: 'Contact', value: 'contact', description: 'Contact management' },
+					{ name: 'Delegation', value: 'delegation', description: 'Delegation management' },
 					{ name: 'Folder', value: 'folder', description: 'Folder management' },
 					{ name: 'Mail', value: 'mails', description: 'Mail management' },
 					{ name: 'Misc', value: 'misc', description: 'Misc operations' },
@@ -827,6 +829,11 @@ export class KerioConnectUser implements INodeType {
 							'createNote',
 							'editNote',
 							'deleteNote',
+							'getActiveDelegation',
+							'removeAllDelegates',
+							'usersForDelegation',
+							'addDelegateUsers',
+							'removeSelectedDelegate',
 						],
 					},
 				},
@@ -884,6 +891,11 @@ export class KerioConnectUser implements INodeType {
 							'createNote',
 							'editNote',
 							'deleteNote',
+							'getActiveDelegation',
+							'removeAllDelegates',
+							'usersForDelegation',
+							'addDelegateUsers',
+							'removeSelectedDelegate',
 						],
 					},
 				},
@@ -1976,6 +1988,121 @@ export class KerioConnectUser implements INodeType {
 						type: 'boolean',
 						default: false,
 						 hint: 'Automatically select the first email',
+					},
+				],
+			},
+			// ========================================
+			// DELEGATION RESOURCE OPERATIONS
+			// ========================================
+			// Operations: Get Delegation, Remove All Delegates, Users for Delegation
+			// Purpose: Manage delegation settings and permissions
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				noDataExpression: true,
+				hint: 'Manage delegation settings',
+				options: [
+					{ name: 'Add Delegate Users', value: 'addDelegateUsers', description: 'Add delegate users to delegation list', action: 'Add delegate users' },
+					{ name: 'Get Active Delegation', value: 'getActiveDelegation', description: 'Get active delegation users', action: 'Get active delegation users' },
+					{ name: 'Get Users for Delegation', value: 'usersForDelegation', description: 'Get users, groups, and domains available for delegation', action: 'Get users for delegation' },
+					{ name: 'Remove All Delegates', value: 'removeAllDelegates', description: 'Remove all delegates from delegation list', action: 'Remove all delegates' },
+					{ name: 'Remove Selected Delegate', value: 'removeSelectedDelegate', description: 'Remove specific delegates by their IDs', action: 'Remove selected delegates' },
+				],
+				default: 'getActiveDelegation',
+				required: true,
+				displayOptions: { show: { resource: ['delegation'] } },
+			},
+			// ========================================
+			// DELEGATE USERS FIELDS
+			// ========================================
+			// Fields for adding delegate users to delegation list
+			{
+				displayName: 'Delegate Users',
+				name: 'delegateUsers',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['delegation'],
+						operation: ['addDelegateUsers'],
+					},
+				},
+				options: [
+					{
+						displayName: 'Delegate',
+						name: 'delegate',
+						values: [
+							{
+								displayName: 'Display Name',
+								name: 'displayName',
+								type: 'string',
+								default: '',
+								required: true,
+								hint: 'Display name of the delegate user',
+							},
+							{
+								displayName: 'User ID',
+								name: 'userId',
+								type: 'string',
+								default: '',
+								required: true,
+								hint: 'Unique ID of the delegate user (keriodb://user/...)',
+							},
+							{
+								displayName: 'Email Address',
+								name: 'mailAddress',
+								type: 'string',
+								default: '',
+								required: true,
+								hint: 'Email address of the delegate user',
+							},
+							{
+								displayName: 'Inbox Read/Write Access',
+								name: 'isInboxRW',
+								type: 'boolean',
+								default: false,
+								hint: 'Whether the delegate has read/write access to inbox',
+							},
+						],
+					},
+				],
+			},
+			// ========================================
+			// REMOVE SELECTED DELEGATE FIELDS
+			// ========================================
+			// Fields for removing specific delegates by their IDs
+			{
+				displayName: 'Delegate IDs to Remove',
+				name: 'delegateIdsToRemove',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['delegation'],
+						operation: ['removeSelectedDelegate'],
+					},
+				},
+				options: [
+					{
+						displayName: 'Delegate ID',
+						name: 'delegateId',
+						values: [
+							{
+								displayName: 'User ID',
+								name: 'userId',
+								type: 'string',
+								default: '',
+								required: true,
+								hint: 'Unique ID of the delegate to remove (keriodb://user/...)',
+							},
+						],
 					},
 				],
 			},
@@ -3834,6 +3961,218 @@ export class KerioConnectUser implements INodeType {
 
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
+				} else {
+					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
+				}
+			} else if (resource === 'delegation') {
+				// ========================================
+				// DELEGATION RESOURCE HANDLING
+				// ========================================
+				// Purpose: Get all users that are delegated to the current user
+				// Methods: Session.getDelegation
+				if (operation === 'getActiveDelegation') {
+					// Get all users that are delegated to the current user
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 31,
+						method: 'Delegation.get',
+						params: {},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'removeAllDelegates') {
+					// Remove all delegates from delegation list
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 49,
+						method: 'Delegation.set',
+						params: {
+							list: [],
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'usersForDelegation') {
+					// Get users, groups, and domains available for delegation
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 17,
+						method: 'Principals.get',
+						params: {
+							users: true,
+							groups: true,
+							domains: true,
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'addDelegateUsers') {
+					// Add delegate users to delegation list
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const delegateUsers = this.getNodeParameter('delegateUsers', i) as {
+						delegate: Array<{
+							displayName: string;
+							userId: string;
+							mailAddress: string;
+							isInboxRW: boolean;
+						}>;
+					};
+
+					// First, get the existing delegation list
+					const getDelegationRequestOptions = {
+						...requestOptions,
+						headers: {
+							...requestOptions.headers,
+							Cookie: cookie,
+							'X-Token': token,
+						},
+						body: {
+							jsonrpc: '2.0',
+							id: 31,
+							method: 'Delegation.get',
+							params: {},
+						},
+					};
+
+					const existingDelegationResponse = await this.helpers.request!(getDelegationRequestOptions);
+					const existingDelegates = existingDelegationResponse.body?.result?.list || [];
+
+					// Format new delegate users for API
+					const newDelegates = (delegateUsers.delegate || []).map((delegate) => ({
+						isInboxRW: delegate.isInboxRW,
+						principal: {
+							displayName: delegate.displayName,
+							id: delegate.userId,
+							mailAddress: delegate.mailAddress,
+						},
+					}));
+
+					// Create a map of existing delegates by ID for quick lookup
+					const existingDelegatesMap = new Map();
+					existingDelegates.forEach((delegate: any) => {
+						existingDelegatesMap.set(delegate.principal.id, delegate);
+					});
+
+					// Process new delegates: overwrite existing ones, add new ones
+					const updatedDelegates = [...existingDelegates]; // Start with existing delegates
+					let overwrittenCount = 0;
+					let addedCount = 0;
+
+					newDelegates.forEach((newDelegate) => {
+						const existingDelegate = existingDelegatesMap.get(newDelegate.principal.id);
+						if (existingDelegate) {
+							// Overwrite existing delegate
+							const index = updatedDelegates.findIndex(d => d.principal.id === newDelegate.principal.id);
+							if (index !== -1) {
+								updatedDelegates[index] = newDelegate;
+								overwrittenCount++;
+							}
+						} else {
+							// Add new delegate
+							updatedDelegates.push(newDelegate);
+							addedCount++;
+						}
+					});
+
+					// Set the updated delegation list
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 21,
+						method: 'Delegation.set',
+						params: {
+							list: updatedDelegates,
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({
+						json: {
+							...response.body.result,
+							addedDelegates: addedCount,
+							overwrittenDelegates: overwrittenCount,
+							totalDelegates: updatedDelegates.length,
+							existingDelegates: existingDelegates.length,
+						}
+					});
+				} else if (operation === 'removeSelectedDelegate') {
+					// Remove specific delegates by their IDs
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const delegateIdsToRemove = this.getNodeParameter('delegateIdsToRemove', i) as {
+						delegateId: Array<{
+							userId: string;
+						}>;
+					};
+
+					// First, get the existing delegation list
+					const getDelegationRequestOptions = {
+						...requestOptions,
+						headers: {
+							...requestOptions.headers,
+							Cookie: cookie,
+							'X-Token': token,
+						},
+						body: {
+							jsonrpc: '2.0',
+							id: 31,
+							method: 'Delegation.get',
+							params: {},
+						},
+					};
+
+					const existingDelegationResponse = await this.helpers.request!(getDelegationRequestOptions);
+					const existingDelegates = existingDelegationResponse.body?.result?.list || [];
+
+					// Get the IDs to remove
+					const idsToRemove = delegateIdsToRemove.delegateId.map((delegate) => delegate.userId);
+
+					// Filter out the delegates to remove
+					const updatedDelegates = existingDelegates.filter((delegate: any) =>
+						!idsToRemove.includes(delegate.principal.id)
+					);
+
+					// Set the updated delegation list
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 21,
+						method: 'Delegation.set',
+						params: {
+							list: updatedDelegates,
+						},
+					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({
+						json: {
+							...response.body.result,
+							removedDelegates: existingDelegates.length - updatedDelegates.length,
+							totalDelegates: updatedDelegates.length,
+							existingDelegates: existingDelegates.length,
+						}
+					});
 				} else {
 					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${operation}`);
 				}
