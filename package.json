@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-kerio-userapi",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Kerio Connect User API nodes for n8n - Comprehensive integration with Kerio Connect's JSON-RPC API for managing email, calendar, contacts, tasks, notes, and other user operations",
   "keywords": [
     "n8n-community-node-package",
