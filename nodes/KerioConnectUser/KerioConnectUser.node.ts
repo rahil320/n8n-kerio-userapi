@@ -32,6 +32,7 @@ import {
 	NodeConnectionType,
 	INodeProperties,
 	NodeOperationError,
+	//IHttpRequestOptions,
 } from 'n8n-workflow';
 
 export class KerioConnectUser implements INodeType {
@@ -241,10 +242,11 @@ export class KerioConnectUser implements INodeType {
 				hint: 'Manage mails',
 				options: [
 					{ name: 'Delete Mail', value: 'deleteMail', description: 'Delete or move mail to trash', action: 'Delete mail' },
-					{ name: 'Get Mails', value: 'getMails', description: 'Get mails from a folder', action: 'Get mails from a folder' },
+					{ name: 'Get Mails', value: 'getMails', description: 'Get mails from a folder (inbox, sent, trash, etc.)', action: 'Get mails from a folder' },
 					{ name: 'Search Mail', value: 'searchMail', description: 'Search for mails', action: 'Search for mails' },
-					{ name: 'Send Mail', value: 'sendMail', description: 'Send a new email', action: 'Send a new email' },
+					{ name: 'Send Mail', value: 'sendMail', description: 'Send a new email to a recipient', action: 'Send a new email' },
 					{ name: 'Set Properties', value: 'setProperties', description: 'Set mail properties like read/unread or flag status', action: 'Set mail properties' },
+					{ name: 'Upload Mail Attachment', value: 'uploadMailAttachment', description: 'Upload binary data as mail attachment', action: 'Upload mail attachment' },
 				],
 				default: 'getMails',
 				required: true,
@@ -710,6 +712,23 @@ export class KerioConnectUser implements INodeType {
 				hint: 'ID of the mail folder to get mails from',
 			},
 			// ========================================
+			// MAIL LIMIT FIELD
+			// ========================================
+			// Field for mail limit
+			{
+				displayName: 'Limit',
+				name: 'mailLimit',
+				type: 'number',
+				default: 10,
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['getMails'],
+					},
+				},
+				hint: 'Number of results to fetch',
+			},
+			// ========================================
 			// REQUIRED MAIL FOLDER ID FIELD FOR SEARCH MAIL OPERATION
 			// ========================================
 			// Field for mail folder ID required for search operation
@@ -815,6 +834,7 @@ export class KerioConnectUser implements INodeType {
 							'setProperties',
 							'sendMail',
 							'deleteMail',
+							'uploadMailAttachment',
 							'getContacts',
 							'addContact',
 							'updateContact',
@@ -877,6 +897,7 @@ export class KerioConnectUser implements INodeType {
 							'setProperties',
 							'sendMail',
 							'deleteMail',
+							'uploadMailAttachment',
 							'getContacts',
 							'addContact',
 							'updateContact',
@@ -1265,6 +1286,119 @@ export class KerioConnectUser implements INodeType {
 				hint: 'Email message content (HTML supported)',
 			},
 			{
+				displayName: 'Content Type',
+				name: 'contentType',
+				type: 'options',
+				default: 'html',
+				options: [
+					{ name: 'HTML', value: 'html' },
+					{ name: 'Plain Text', value: 'text' },
+				],
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['sendMail'],
+					},
+				},
+				hint: 'Content type of the email message',
+			},
+			{
+				displayName: 'Message Encoding',
+				name: 'messageEncoding',
+				type: 'options',
+				default: 'utf8',
+				options: [
+					{ name: 'UTF-8', value: 'utf8' },
+					{ name: 'ISO-8859-1', value: 'iso88591' },
+					{ name: 'Windows-1252', value: 'windows1252' },
+				],
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['sendMail'],
+					},
+				},
+				hint: 'Character encoding for the message content',
+			},
+			{
+				displayName: 'Reply To',
+				name: 'replyTo',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['sendMail'],
+					},
+				},
+				options: [
+					{
+						name: 'recipients',
+						displayName: 'Reply To',
+						values: [
+							{
+								displayName: 'Email',
+								name: 'email',
+								type: 'string',
+								default: '',
+								required: true,
+								placeholder: 'name@email.com',
+							},
+							{
+								displayName: 'Name',
+								name: 'name',
+								type: 'string',
+								default: '',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Attachments',
+				name: 'attachments',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['sendMail'],
+					},
+				},
+				options: [
+					{
+						name: 'attachment',
+						displayName: 'Attachment',
+						values: [
+							{
+								displayName: 'Attachment ID',
+								name: 'attachmentId',
+								type: 'string',
+								default: '',
+								required: true,
+								placeholder: '466732cac7',
+								hint: 'ID of the existing attachment (e.g., 466732cac7)',
+							},
+							{
+								displayName: 'Attachment Name',
+								name: 'attachmentName',
+								type: 'string',
+								default: '',
+								required: true,
+								placeholder: 'document.pdf',
+								hint: 'Name of the existing attachment',
+							},
+						],
+					},
+				],
+			},
+			{
 				displayName: 'Priority',
 				name: 'priority',
 				type: 'options',
@@ -1295,14 +1429,40 @@ export class KerioConnectUser implements INodeType {
 				},
 				options: [
 					{
-						displayName: 'Encrypt',
-						name: 'encrypt',
-						type: 'boolean',
-						default: false,
+						displayName: 'Custom Headers',
+						name: 'customHeaders',
+						type: 'fixedCollection',
+						typeOptions: {
+							multipleValues: true,
+						},
+						default: {},
+						options: [
+							{
+								name: 'header',
+								displayName: 'Header',
+								values: [
+									{
+										displayName: 'Header Name',
+										name: 'name',
+										type: 'string',
+										default: '',
+										required: true,
+										placeholder: 'X-Custom-Header',
+									},
+									{
+										displayName: 'Header Value',
+										name: 'value',
+										type: 'string',
+										default: '',
+										required: true,
+									},
+								],
+							},
+						],
 					},
 					{
-						displayName: 'Sign',
-						name: 'sign',
+						displayName: 'Encrypt',
+						name: 'encrypt',
 						type: 'boolean',
 						default: false,
 					},
@@ -1317,6 +1477,12 @@ export class KerioConnectUser implements INodeType {
 						name: 'isMDNSent',
 						type: 'boolean',
 						default: true,
+					},
+					{
+						displayName: 'Sign',
+						name: 'sign',
+						type: 'boolean',
+						default: false,
 					},
 				],
 			},
@@ -2106,6 +2272,63 @@ export class KerioConnectUser implements INodeType {
 					},
 				],
 			},
+			// ========================================
+			// UPLOAD MAIL ATTACHMENT FIELDS
+			// ========================================
+			// Fields for uploading mail attachments
+			{
+				displayName: 'Binary Property',
+				name: 'binaryPropertyName',
+				type: 'string',
+				default: 'data',
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['uploadMailAttachment'],
+					},
+				},
+				hint: 'Name of the binary property containing the data to upload',
+			},
+			{
+				displayName: 'File Name',
+				name: 'fileName',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['uploadMailAttachment'],
+					},
+				},
+				hint: 'Name of the file to upload',
+			},
+			{
+				displayName: 'Content Type',
+				name: 'contentType',
+				type: 'string',
+				default: 'application/octet-stream',
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['uploadMailAttachment'],
+					},
+				},
+				hint: 'MIME type of the file (e.g., text/plain, image/jpeg)',
+			},
+			{
+				displayName: 'Content Description',
+				name: 'contentDescription',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['uploadMailAttachment'],
+					},
+				},
+				hint: 'Description of the attachment content',
+			},
 		] as INodeProperties[],
 	};
 
@@ -2550,48 +2773,49 @@ export class KerioConnectUser implements INodeType {
 					const token = this.getNodeParameter('token', i, '') as string;
 					const cookie = this.getNodeParameter('cookie', i, '') as string;
 					const folderId = this.getNodeParameter('mailFolderId', i) as string;
+					const limit = this.getNodeParameter('mailLimit', i, 10) as number;
 
 						requestOptions.headers.Cookie = cookie;
 						requestOptions.headers['X-Token'] = token;
-						requestOptions.body = {
-							id: 72,
-							jsonrpc: '2.0',
-							method: 'Mails.get',
-							params: {
-								folderIds: [folderId],
-								query: {
-									fields: [
-										'id',
-										'from',
-										'to',
-										'subject',
-										'receiveDate',
-										'modifiedDate',
-										'sendDate',
-										'isSeen',
-										'isJunk',
-										'isAnswered',
-										'isForwarded',
-										'isFlagged',
-										'isReadOnly',
-										'isDraft',
-										'folderId',
-										'hasAttachment',
-										'priority',
-										'size'
-									],
-									limit: 50,
-									orderBy: [
-										{
-											caseSensitive: true,
-											columnName: 'receiveDate',
-											direction: 'Desc'
-										}
-									],
-									start: 0
+							requestOptions.body = {
+								id: 72,
+								jsonrpc: '2.0',
+								method: 'Mails.get',
+								params: {
+									folderIds: [folderId],
+									query: {
+										fields: [
+											'id',
+											'from',
+											'to',
+											'subject',
+											'receiveDate',
+											'modifiedDate',
+											'sendDate',
+											'isSeen',
+											'isJunk',
+											'isAnswered',
+											'isForwarded',
+											'isFlagged',
+											'isReadOnly',
+											'isDraft',
+											'folderId',
+											'hasAttachment',
+											'priority',
+											'size'
+										],
+										limit: limit,
+										orderBy: [
+											{
+												caseSensitive: true,
+												columnName: 'receiveDate',
+												direction: 'Desc'
+											}
+										],
+										start: 0
+									}
 								}
-							}
-						};
+							};
 
 						const response = await this.helpers.request!(requestOptions);
 						returnItems.push({ json: response.body.result });
@@ -2638,13 +2862,58 @@ export class KerioConnectUser implements INodeType {
 					const bcc = this.getNodeParameter('bcc', i) as { recipients: Array<{ email: string; name?: string }> };
 					const subject = this.getNodeParameter('subject', i) as string;
 					const message = this.getNodeParameter('message', i) as string;
+					const contentType = this.getNodeParameter('contentType', i, 'html') as string;
+					const messageEncoding = this.getNodeParameter('messageEncoding', i, 'utf8') as string;
 					const priority = this.getNodeParameter('priority', i) as string;
+					const replyTo = this.getNodeParameter('replyTo', i) as { recipients: Array<{ email: string; name?: string }> };
+					const attachments = this.getNodeParameter('attachments', i) as {
+						attachment: Array<{
+							attachmentId: string;
+							attachmentName: string;
+						}>;
+					};
 					const additionalOptions = this.getNodeParameter('additionalOptions', i) as {
 						encrypt?: boolean;
 						sign?: boolean;
 						requestDSN?: boolean;
 						isMDNSent?: boolean;
+						customHeaders?: {
+							header: Array<{
+								name: string;
+								value: string;
+							}>;
+						};
 					};
+
+					// Validate required fields
+					if (!fromEmail || !to.recipients || to.recipients.length === 0 || !subject) {
+						throw new NodeOperationError(this.getNode(), 'From Email, To recipients, and Subject are required fields');
+					}
+
+					// Basic email validation function
+					const isValidEmail = (email: string): boolean => {
+						const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+						return emailRegex.test(email);
+					};
+
+					// Validate email addresses
+					if (!isValidEmail(fromEmail)) {
+						throw new NodeOperationError(this.getNode(), `Invalid From Email address: ${fromEmail}`);
+					}
+
+					// Validate all recipient email addresses
+					const allRecipients = [
+						...to.recipients,
+						...(cc.recipients || []),
+						...(bcc.recipients || []),
+						...(replyTo.recipients || [])
+					];
+
+					for (const recipient of allRecipients) {
+						if (!isValidEmail(recipient.email)) {
+							throw new NodeOperationError(this.getNode(), `Invalid email address: ${recipient.email}`);
+						}
+					}
 
 					// Format recipients for API
 					const formatRecipients = (recipients: Array<{ email: string; name?: string }>) => {
@@ -2654,14 +2923,40 @@ export class KerioConnectUser implements INodeType {
 						}));
 					};
 
+					// Process attachments if provided
+					let processedAttachments: any[] = [];
+					if (attachments && attachments.attachment && attachments.attachment.length > 0) {
+						for (const attachment of attachments.attachment) {
+							// Handle existing attachment ID
+							if (!attachment.attachmentId || !attachment.attachmentName) {
+								throw new NodeOperationError(this.getNode(), 'Attachment ID and Attachment Name are required for attachments');
+							}
+
+							processedAttachments.push({
+								id: attachment.attachmentId,
+								name: attachment.attachmentName,
+							});
+						}
+					}
+
+					// Process custom headers if provided
+					let customHeaders: any[] = [];
+					if (additionalOptions.customHeaders && additionalOptions.customHeaders.header) {
+						customHeaders = additionalOptions.customHeaders.header.map(header => ({
+							name: header.name,
+							value: header.value,
+						}));
+					}
+
 					const mailData = {
-						attachments: [],
+						attachments: processedAttachments,
 						bcc: formatRecipients(bcc.recipients || []),
 						cc: formatRecipients(cc.recipients || []),
 						displayableParts: [
 							{
 								content: message,
-								contentType: 'ctTextHtml',
+								contentType: contentType === 'html' ? 'ctTextHtml' : 'ctTextPlain',
+								encoding: messageEncoding,
 							},
 						],
 						encrypt: additionalOptions.encrypt || false,
@@ -2669,7 +2964,7 @@ export class KerioConnectUser implements INodeType {
 							address: fromEmail,
 							name: fromName,
 						},
-						headers: [],
+						headers: customHeaders,
 						isAnswered: false,
 						isDraft: false,
 						isFlagged: false,
@@ -2680,7 +2975,7 @@ export class KerioConnectUser implements INodeType {
 						isSeen: true,
 						notificationTo: {},
 						priority,
-						replyTo: [],
+						replyTo: formatRecipients(replyTo.recipients || []),
 						requestDSN: additionalOptions.requestDSN || false,
 						send: true,
 						sender: {},
@@ -2702,7 +2997,22 @@ export class KerioConnectUser implements INodeType {
 					};
 
 					const response = await this.helpers.request!(requestOptions);
-					returnItems.push({ json: response.body.result });
+
+					// Enhanced response with additional context
+					const result = {
+						success: true,
+						messageId: response.body?.result?.list?.[0]?.id || null,
+						subject: subject,
+						from: fromEmail,
+						to: to.recipients.map(r => r.email),
+						cc: (cc.recipients || []).map(r => r.email),
+						bcc: (bcc.recipients || []).map(r => r.email),
+						attachmentsCount: processedAttachments.length,
+						timestamp: new Date().toISOString(),
+						apiResponse: response.body.result,
+					};
+
+					returnItems.push({ json: result });
 				} else if (operation === 'deleteMail') {
 					// Delete emails by moving to trash or permanent deletion
 					const token = this.getNodeParameter('token', i, '') as string;
@@ -2797,6 +3107,35 @@ export class KerioConnectUser implements INodeType {
 							}
 						}
 					};
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'uploadMailAttachment') {
+					// Upload binary data as mail attachment
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const fileName = this.getNodeParameter('fileName', i) as string;
+					const contentType = this.getNodeParameter('contentType', i, 'application/octet-stream') as string;
+					const contentDescription = this.getNodeParameter('contentDescription', i, '') as string;
+					const binaryPropertyName = this.getNodeParameter('binaryPropertyName', i, 'data') as string;
+
+					// Get the binary data from input item
+					const items = this.getInputData();
+					const item = items[i];
+					if (!item.binary || !item.binary[binaryPropertyName]) {
+						throw new NodeOperationError(this.getNode(), `Binary property '${binaryPropertyName}' not found on input item`);
+					}
+					const binaryDataBuffer = Buffer.from(item.binary[binaryPropertyName].data, 'base64');
+
+					// Use the same request options pattern as other operations
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.headers['filename'] = fileName;
+					requestOptions.headers['name'] = fileName;
+					requestOptions.headers['Content-Type'] = contentType; // Override the default Content-Type
+					requestOptions.headers['Content-Description'] = contentDescription;
+					requestOptions.url = `${serverUrl}/webmail/api/jsonrpc/attachment-upload`;
+					requestOptions.body = binaryDataBuffer;
 
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
@@ -4184,3 +4523,4 @@ export class KerioConnectUser implements INodeType {
 		return [returnItems];
 	}
 }
+

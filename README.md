@@ -77,6 +77,7 @@ For all other operations (Mail, Calendar, Contacts, etc.), you'll need to:
 - **Send Mail**: Send a new email
 - **Delete Mail**: Delete emails (permanently or move to trash)
 - **Search Mail**: Search for emails using full-text search
+- **Upload Attachment**: Upload file attachments to be used in emails
 
 ### 📅 Calendar
 - **Create Event**: Create a new calendar event
