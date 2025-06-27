@@ -74,6 +74,7 @@ For all other operations (Mail, Calendar, Contacts, etc.), you'll need to:
 
 ### 📬 Mail Operations
 - **Get Mails**: Retrieve emails from specified folder
+- **Get Mail by ID**: Retrieve a specific email by its unique identifier
 - **Send Mail**: Send a new email
 - **Delete Mail**: Delete emails (permanently or move to trash)
 - **Search Mail**: Search for emails using full-text search

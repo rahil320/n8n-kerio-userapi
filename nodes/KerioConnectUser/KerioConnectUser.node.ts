@@ -21,7 +21,7 @@
  * Most operations require a valid session token and cookie from login.
  *
  * @author Rahil Sarwar
- * @version 1.0
+ * @version 1.3.0
  */
 
 import {
@@ -242,6 +242,7 @@ export class KerioConnectUser implements INodeType {
 				hint: 'Manage mails',
 				options: [
 					{ name: 'Delete Mail', value: 'deleteMail', description: 'Delete or move mail to trash', action: 'Delete mail' },
+					{ name: 'Get Mail by ID', value: 'getMailById', description: 'Get a specific mail by its unique ID', action: 'Get a specific mail by ID' },
 					{ name: 'Get Mails', value: 'getMails', description: 'Get mails from a folder (inbox, sent, trash, etc.)', action: 'Get mails from a folder' },
 					{ name: 'Search Mail', value: 'searchMail', description: 'Search for mails', action: 'Search for mails' },
 					{ name: 'Send Mail', value: 'sendMail', description: 'Send a new email to a recipient', action: 'Send a new email' },
@@ -656,6 +657,25 @@ export class KerioConnectUser implements INodeType {
 				hint: 'ID of the mail to modify',
 			},
 			// ========================================
+			// ADD MAIL ID FIELD FOR GET MAIL BY ID OPERATION
+			// ========================================
+			// Field for mail ID when getting a specific mail
+			{
+				displayName: 'Mail ID',
+				name: 'mailIdForGet',
+				type: 'string',
+				default: '',
+				required: true,
+				displayOptions: {
+					show: {
+						resource: ['mails'],
+						operation: ['getMailById'],
+					},
+				},
+				placeholder: 'keriostorage://mail/domain/user/mailId',
+				hint: 'Unique ID of the mail to retrieve (e.g., keriostorage://mail/sotlive.com/admin/308a6165-c311-4927-a2e9-421839d42081/1)',
+			},
+			// ========================================
 			// ADD READ/UNREAD STATUS FIELD
 			// ========================================
 			// Field for marking mail as read or unread
@@ -830,6 +850,7 @@ export class KerioConnectUser implements INodeType {
 							'removeEvent',
 							'getSubscribedFolders',
 							'getMails',
+							'getMailById',
 							'searchMail',
 							'setProperties',
 							'sendMail',
@@ -893,6 +914,7 @@ export class KerioConnectUser implements INodeType {
 							'removeEvent',
 							'getSubscribedFolders',
 							'getMails',
+							'getMailById',
 							'searchMail',
 							'setProperties',
 							'sendMail',
@@ -3136,6 +3158,30 @@ export class KerioConnectUser implements INodeType {
 					requestOptions.headers['Content-Description'] = contentDescription;
 					requestOptions.url = `${serverUrl}/webmail/api/jsonrpc/attachment-upload`;
 					requestOptions.body = binaryDataBuffer;
+
+					const response = await this.helpers.request!(requestOptions);
+					returnItems.push({ json: response.body.result });
+				} else if (operation === 'getMailById') {
+					// Get a specific mail by its unique ID
+					const token = this.getNodeParameter('token', i, '') as string;
+					const cookie = this.getNodeParameter('cookie', i, '') as string;
+					const mailId = this.getNodeParameter('mailIdForGet', i) as string;
+
+					// Validate required mail ID
+					if (!mailId) {
+						throw new NodeOperationError(this.getNode(), 'Mail ID is required to retrieve a specific mail');
+					}
+
+					requestOptions.headers.Cookie = cookie;
+					requestOptions.headers['X-Token'] = token;
+					requestOptions.body = {
+						jsonrpc: '2.0',
+						id: 101,
+						method: 'Mails.getById',
+						params: {
+							ids: [mailId],
+						},
+					};
 
 					const response = await this.helpers.request!(requestOptions);
 					returnItems.push({ json: response.body.result });
