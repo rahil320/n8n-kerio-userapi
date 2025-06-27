@@ -26,7 +26,12 @@ This repo contains Kerio Connect Collaboration Suite User Mode API (webmail clie
 
 ## Installation
 
-Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation.
+Install the node using the "community nodes" section.
+
+![image](https://github.com/user-attachments/assets/8b9d8d57-5ff4-4226-afbc-b5aa03491dfa)
+
+
+For official instuctions, follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation.
 
 ## Basic Usage
 
